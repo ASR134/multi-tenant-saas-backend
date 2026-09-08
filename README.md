@@ -36,8 +36,6 @@ The project focuses on authentication, organizations, tenant-based access, proje
 
 ## 📁 Project Structure
 
-## 📁 Project Structure
-
 ```text
 multi_tenant_saas_system/
 │
