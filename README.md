@@ -37,6 +37,7 @@ The project implements authentication, organizations, memberships, tenant-based 
 
 ## 📁 Project Structure
 
+```text
 multi_tenant_saas_system/
 │
 ├── alembic/
@@ -129,12 +130,15 @@ multi_tenant_saas_system/
 │       └── test_project_service.py
 │
 ├── .dockerignore
+├── .env.example
+├── .gitignore
 ├── alembic.ini
 ├── docker-compose.yml
 ├── Dockerfile
 ├── pytest.ini
-├── requirements.txt
-└── README.md
+├── README.md
+└── requirements.txt
+```
 
 ## ⚙️ Local Setup
 
