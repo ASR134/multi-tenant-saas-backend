@@ -36,51 +36,110 @@ The project focuses on authentication, organizations, tenant-based access, proje
 
 ## 📁 Project Structure
 
-app/
-├── api/
-│   └── v1/
-│       ├── auth.py
-│       ├── comments.py
-│       ├── invitations.py
-│       ├── organizations.py
-│       ├── projects.py
-│       ├── tasks.py
-│       └── users.py
-├── core/
-├── db/
-├── dependencies/
-├── models/
-│   ├── comment.py
-│   ├── invitation.py
-│   ├── membership.py
-│   ├── organization.py
-│   ├── project.py
-│   ├── task.py
-│   └── user.py
-├── repositories/
-├── schemas/
-├── services/
-├── utils/
-├── worker/
-├── __init__.py
-└── main.py
+## 📁 Project Structure
 
-alembic/
-├── versions/
-└── env.py
-
-tests/
-├── unit/
-
-.dockerignore
-.env.example
-.gitignore
-Dockerfile
-README.md
-alembic.ini
-docker-compose.yml
-pytest.ini
-requirements.txt
+```text
+multi_tenant_saas_system/
+│
+├── alembic/
+│   ├── env.py
+│   ├── README
+│   ├── script.py.mako
+│   └── versions/
+│
+├── app/
+│   ├── api/
+│   │   └── v1/
+│   │       ├── auth.py
+│   │       ├── comments.py
+│   │       ├── invitations.py
+│   │       ├── organizations.py
+│   │       ├── projects.py
+│   │       ├── tasks.py
+│   │       └── users.py
+│   │
+│   ├── core/
+│   │   └── config.py
+│   │
+│   ├── db/
+│   │   ├── base.py
+│   │   ├── redis.py
+│   │   ├── session.py
+│   │   └── __init__.py
+│   │
+│   ├── dependencies/
+│   │   ├── auth.py
+│   │   └── tenant.py
+│   │
+│   ├── models/
+│   │   ├── comment.py
+│   │   ├── invitation.py
+│   │   ├── membership.py
+│   │   ├── organization.py
+│   │   ├── project.py
+│   │   ├── task.py
+│   │   ├── user.py
+│   │   └── __init__.py
+│   │
+│   ├── repositories/
+│   │   ├── comment.py
+│   │   ├── invitation.py
+│   │   ├── membership.py
+│   │   ├── organization.py
+│   │   ├── project.py
+│   │   ├── task.py
+│   │   └── user.py
+│   │
+│   ├── schemas/
+│   │   ├── comment.py
+│   │   ├── invitation.py
+│   │   ├── organization.py
+│   │   ├── project.py
+│   │   ├── task.py
+│   │   └── user.py
+│   │
+│   ├── services/
+│   │   ├── comment.py
+│   │   ├── invitation.py
+│   │   ├── membership.py
+│   │   ├── organization.py
+│   │   ├── project.py
+│   │   ├── task.py
+│   │   └── user.py
+│   │
+│   ├── utils/
+│   │   └── security.py
+│   │
+│   ├── worker/
+│   │   ├── celery_app.py
+│   │   ├── tasks.py
+│   │   └── __init__.py
+│   │
+│   ├── main.py
+│   └── __init__.py
+│
+├── tests/
+│   ├── conftest.py
+│   ├── test_api.py
+│   ├── test_auth.py
+│   ├── test_comments.py
+│   ├── test_invitations.py
+│   ├── test_organizations.py
+│   ├── test_projects.py
+│   ├── test_tasks.py
+│   └── unit/
+│       └── test_project_service.py
+│
+├── .dockerignore
+├── .env.example
+├── .gitignore
+├── alembic.ini
+├── docker-compose.yml
+├── Dockerfile
+├── pytest.ini
+├── README.md
+└── requirements.txt
+```
 
 ## ⚙️ Local Setup
 
