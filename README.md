@@ -1,8 +1,8 @@
 # Multi-Tenant SaaS Backend
 
-A multi-tenant SaaS backend built with FastAPI, PostgreSQL, SQLAlchemy, Redis, and Celery.
+A multi-tenant SaaS backend built with **FastAPI**, **PostgreSQL**, **SQLAlchemy**, **Redis**, and **Celery**.
 
-The project focuses on authentication, organizations, tenant-based access, projects, tasks, comments, invitations, and background tasks.
+The project implements authentication, organizations, memberships, tenant-based access, projects, tasks, comments, invitations, and background task processing.
 
 ## 🚀 Features
 
@@ -10,11 +10,12 @@ The project focuses on authentication, organizations, tenant-based access, proje
 - User Management
 - Multi-Tenant Organizations
 - Organization Memberships
+- Tenant-based Authorization
 - Projects & Tasks
 - Comments
 - Invitations
-- Background Tasks with Celery
 - Redis Integration
+- Celery Background Tasks
 - Async PostgreSQL with SQLAlchemy
 - Alembic Database Migrations
 - Docker & Docker Compose
@@ -22,65 +23,118 @@ The project focuses on authentication, organizations, tenant-based access, proje
 
 ## 🛠️ Tech Stack
 
-- Backend: FastAPI
-- Database: PostgreSQL
-- ORM: SQLAlchemy
-- Authentication: JWT
-- Database Driver: asyncpg
-- Migrations: Alembic
-- Background Tasks: Celery
-- Message Broker: Redis
-- Testing: Pytest
-- Containerization: Docker
-- Deployment: Render + Neon
+- **Backend:** FastAPI
+- **Database:** PostgreSQL
+- **ORM:** SQLAlchemy
+- **Authentication:** JWT
+- **Database Driver:** asyncpg
+- **Migrations:** Alembic
+- **Background Tasks:** Celery
+- **Message Broker:** Redis
+- **Testing:** Pytest
+- **Containerization:** Docker
+- **Deployment:** Render + Neon
 
 ## 📁 Project Structure
 
-app/
-├── api/
-│   └── v1/
-│       ├── auth.py
-│       ├── comments.py
-│       ├── invitations.py
-│       ├── organizations.py
-│       ├── projects.py
-│       ├── tasks.py
-│       └── users.py
-├── core/
-├── db/
-├── dependencies/
-├── models/
-│   ├── comment.py
-│   ├── invitation.py
-│   ├── membership.py
-│   ├── organization.py
-│   ├── project.py
-│   ├── task.py
-│   └── user.py
-├── repositories/
-├── schemas/
-├── services/
-├── utils/
-├── worker/
-├── __init__.py
-└── main.py
-
-alembic/
-├── versions/
-└── env.py
-
-tests/
-├── unit/
-
-.dockerignore
-.env.example
-.gitignore
-Dockerfile
-README.md
-alembic.ini
-docker-compose.yml
-pytest.ini
-requirements.txt
+multi_tenant_saas_system/
+│
+├── alembic/
+│   ├── env.py
+│   ├── README
+│   ├── script.py.mako
+│   └── versions/
+│
+├── app/
+│   ├── api/
+│   │   └── v1/
+│   │       ├── auth.py
+│   │       ├── comments.py
+│   │       ├── invitations.py
+│   │       ├── organizations.py
+│   │       ├── projects.py
+│   │       ├── tasks.py
+│   │       └── users.py
+│   │
+│   ├── core/
+│   │   └── config.py
+│   │
+│   ├── db/
+│   │   ├── base.py
+│   │   ├── redis.py
+│   │   ├── session.py
+│   │   └── __init__.py
+│   │
+│   ├── dependencies/
+│   │   ├── auth.py
+│   │   └── tenant.py
+│   │
+│   ├── models/
+│   │   ├── comment.py
+│   │   ├── invitation.py
+│   │   ├── membership.py
+│   │   ├── organization.py
+│   │   ├── project.py
+│   │   ├── task.py
+│   │   ├── user.py
+│   │   └── __init__.py
+│   │
+│   ├── repositories/
+│   │   ├── comment.py
+│   │   ├── invitation.py
+│   │   ├── membership.py
+│   │   ├── organization.py
+│   │   ├── project.py
+│   │   ├── task.py
+│   │   └── user.py
+│   │
+│   ├── schemas/
+│   │   ├── comment.py
+│   │   ├── invitation.py
+│   │   ├── organization.py
+│   │   ├── project.py
+│   │   ├── task.py
+│   │   └── user.py
+│   │
+│   ├── services/
+│   │   ├── comment.py
+│   │   ├── invitation.py
+│   │   ├── membership.py
+│   │   ├── organization.py
+│   │   ├── project.py
+│   │   ├── task.py
+│   │   └── user.py
+│   │
+│   ├── utils/
+│   │   └── security.py
+│   │
+│   ├── worker/
+│   │   ├── celery_app.py
+│   │   ├── tasks.py
+│   │   └── __init__.py
+│   │
+│   ├── main.py
+│   └── __init__.py
+│
+├── tests/
+│   ├── conftest.py
+│   ├── test_api.py
+│   ├── test_auth.py
+│   ├── test_comments.py
+│   ├── test_invitations.py
+│   ├── test_organizations.py
+│   ├── test_projects.py
+│   ├── test_tasks.py
+│   └── unit/
+│       └── test_project_service.py
+│
+├── .dockerignore
+├── alembic.ini
+├── docker-compose.yml
+├── Dockerfile
+├── pytest.ini
+├── requirements.txt
+└── README.md
 
 ## ⚙️ Local Setup
 
@@ -89,9 +143,12 @@ requirements.txt
     git clone https://github.com/ASR134/multi-tenant-saas-backend.git
     cd multi-tenant-saas-backend
 
-### 2. Create virtual environment
+### 2. Create a virtual environment
 
     python -m venv venv
+
+Activate it on Windows:
+
     venv\Scripts\activate
 
 ### 3. Install dependencies
@@ -102,11 +159,25 @@ requirements.txt
 
 Create a `.env` file using `.env.example` as a reference.
 
+Example:
+
+    SECRET_KEY=your-secret-key
+    ALGORITHM=HS256
+    ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+    POSTGRES_USER=postgres
+    POSTGRES_PASSWORD=your-password
+    POSTGRES_DB=saas_db
+
+    DATABASE_URL=postgresql+asyncpg://postgres:your-password@localhost:5432/saas_db
+
+    REDIS_URL=redis://localhost:6379
+
 ### 5. Start PostgreSQL and Redis
 
     docker compose up -d postgres redis
 
-### 6. Run migrations
+### 6. Run database migrations
 
     alembic upgrade head
 
@@ -118,28 +189,64 @@ API:
 
     http://localhost:8000
 
-Swagger Docs:
+Swagger Documentation:
 
     http://localhost:8000/docs
 
+## 🧪 Testing
+
+Run the test suite:
+
+    pytest
+
+## 🐳 Docker
+
+The project includes Docker support for running the application and its services.
+
+Start all services:
+
+    docker compose up
+
+Stop all services:
+
+    docker compose down
+
+Docker Compose includes:
+
+- PostgreSQL
+- Redis
+- FastAPI
+- Celery Worker
+
 ## ☁️ Deployment
 
-The backend is deployed using:
+The current production setup uses:
 
-    FastAPI     → Render
-    PostgreSQL  → Neon
-    Redis       → Render
+    FastAPI      → Render
+    PostgreSQL   → Neon
+    Redis        → Render
+    Celery       → Not deployed yet
 
-Docker is included for local development and containerized deployment, but the current Render deployment does not use Docker.
+The FastAPI application is deployed on Render without using Docker.
 
 ## 📌 Project Status
 
-Core backend functionality, authentication, multi-tenancy, database migrations, Redis/Celery integration, testing setup, and cloud deployment are implemented.
+The core backend functionality is implemented, including:
 
-Celery worker deployment is currently pending.
+- Authentication
+- Multi-tenancy
+- Organizations and memberships
+- Projects and tasks
+- Comments and invitations
+- Database migrations
+- Redis and Celery integration
+- Testing
+- Cloud deployment
+
+The Celery worker is implemented but its production deployment is currently pending.
 
 ## 👨‍💻 Author
 
-ASR134
+**ASR134**
 
-GitHub: https://github.com/ASR134
+GitHub: https://github.com/ASR134/multi-tenant-saas-backend
