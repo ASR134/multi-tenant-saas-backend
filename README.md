@@ -36,28 +36,51 @@ The project focuses on authentication, organizations, tenant-based access, proje
 
 ## 📁 Project Structure
 
-    app/
-    ├── api/
-    │   └── v1/
-    ├── core/
-    ├── db/
-    ├── dependencies/
-    ├── models/
-    ├── repositories/
-    ├── schemas/
-    ├── services/
-    ├── utils/
-    ├── worker/
-    └── main.py
+app/
+├── api/
+│   └── v1/
+│       ├── auth.py
+│       ├── comments.py
+│       ├── invitations.py
+│       ├── organizations.py
+│       ├── projects.py
+│       ├── tasks.py
+│       └── users.py
+├── core/
+├── db/
+├── dependencies/
+├── models/
+│   ├── comment.py
+│   ├── invitation.py
+│   ├── membership.py
+│   ├── organization.py
+│   ├── project.py
+│   ├── task.py
+│   └── user.py
+├── repositories/
+├── schemas/
+├── services/
+├── utils/
+├── worker/
+├── __init__.py
+└── main.py
 
-    alembic/
-    tests/
-    ├── unit/
-    └── integration/
+alembic/
+├── versions/
+└── env.py
 
-    Dockerfile
-    docker-compose.yml
-    requirements.txt
+tests/
+├── unit/
+
+.dockerignore
+.env.example
+.gitignore
+Dockerfile
+README.md
+alembic.ini
+docker-compose.yml
+pytest.ini
+requirements.txt
 
 ## ⚙️ Local Setup
 
