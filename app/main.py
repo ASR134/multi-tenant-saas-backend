@@ -18,6 +18,11 @@ from app.api.v1.invitations import router as invitations_router
 
 app = FastAPI()
 
+@app.get("/")
+async def root():
+    return {
+        "message" : "multi-tenant-saas-backend is Working!"
+    }
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #                                                                                  TESTING 
