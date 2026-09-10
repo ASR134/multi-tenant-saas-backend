@@ -16,6 +16,8 @@ services:
 
   redis:
     image: redis:7
+    ports:
+      - "6379:6379" # host_port:container_port -> means make container port accessible through host_port
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s

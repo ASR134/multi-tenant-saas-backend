@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import UserCreate, UserResponse, UserUpdate
 from app.services.user import UserService
 from app.dependencies.auth import get_current_user
 from app.models.user import User
@@ -53,3 +53,22 @@ async def get_me(
 ):
     return current_user
 
+
+
+@router.patch(
+    "/update_user",
+    response_model=UserResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def update(
+    user_data : UserUpdate,
+    current_user : User = Depends(get_current_user),
+    db : AsyncSession = Depends(get_db),
+):
+
+    service = UserService(db)
+
+    return await service.update_user(
+        full_name=user_data.full_name,
+        user_data=current_user, # User object
+    )

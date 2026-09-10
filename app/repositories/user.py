@@ -41,3 +41,17 @@ class UserRepository:
         await self.db.flush() # sends the insert command.
         # now id,created_at could be generaed. (write db operation)
         return user
+
+
+    async def update(
+            self,
+            full_name : str,
+            user_data : User,
+    ):
+
+        if full_name is not None: # defensive check
+            user_data.full_name = full_name
+
+        await self.db.flush()
+
+        return user_data

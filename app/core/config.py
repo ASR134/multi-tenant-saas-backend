@@ -1,11 +1,11 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
-class Settings(BaseSettings): # defines configuration our application expects
+# pydantic BaseSettings does case-insensitive matching by default.
+class Settings(BaseSettings): # defines configuration our application expects 
     secret_key : str
-    algorithm : str = "HS256"
-    access_token_expire_minutes : int = 30
-    redis_url : str = "redis://localhost:6379"
+    algorithm : str 
+    access_token_expire_minutes : int 
+    redis_url : str 
     database_url : str
     
     model_config = SettingsConfigDict(

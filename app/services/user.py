@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.user import UserRepository
+from app.models.user import User
 from app.utils.security import hash_password, verify_password
 
 
@@ -49,3 +50,18 @@ class UserService:
             return None
 
         return user # User model class object
+
+
+    async def update_user(
+            self,
+            full_name : str,
+            user_data : User,
+    ):
+        user = await self.user_repository.update(
+            full_name=full_name,
+            user_data=user_data,
+        )
+
+        await self.db.commit()
+
+        return user
