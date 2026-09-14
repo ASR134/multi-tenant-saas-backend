@@ -9,7 +9,8 @@ class Settings(BaseSettings): # defines configuration our application expects
     database_url : str
     
     model_config = SettingsConfigDict(
-        env_file = ".env"
+        env_file = ".env",
+        extra="ignore"
     )
 
 # instead of randomly accessing env variables thoughtout our code using os.getenv(..) 

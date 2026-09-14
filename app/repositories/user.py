@@ -55,3 +55,13 @@ class UserRepository:
         await self.db.flush()
 
         return user_data
+
+
+    async def delete(
+            self,
+            user : User,
+    ):
+
+        await self.db.delete(user)
+
+        await self.db.flush()

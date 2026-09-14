@@ -19,14 +19,14 @@ class Comment(Base):
     id : Mapped[int] = mapped_column(primary_key=True)
 
     task_id : Mapped[int] = mapped_column(
-        ForeignKey("tasks.id",ondelete="CASCADE"),
+        ForeignKey("tasks.id"),
         nullable=False,
         index = True,
     )
 
     user_id : Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
-        nullable=False,
+        ForeignKey("users.id",ondelete="SET NULL"),
+        nullable=True,
     )
 
     content : Mapped[str] = mapped_column(

@@ -49,15 +49,18 @@ class User(Base):
 
 
     memberships : Mapped[list["Membership"]] = relationship(
-        back_populates="user"
+        back_populates="user",
+        passive_deletes=True,# Let the database handle what happens to these child rows when the parent is deleted . Don't let SQLAlchemy manage the delete behaviour 
     )
 
     comments : Mapped[list["Comment"]] = relationship(
         back_populates="user",
+        passive_deletes=True,
     )
 
     sent_invitations : Mapped[list["Invitation"]] = relationship(
         back_populates="inviter",
+        passive_deletes=True,
     )
 # relationship() returns python object to the class attribute.
 # back_populates is used to setup two way relationship.

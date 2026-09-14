@@ -26,8 +26,8 @@ class Invitation(Base):
     )
 
     invited_by : Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
-        nullable=False,
+        ForeignKey("users.id",ondelete="SET NULL"),
+        nullable=True,
     )
 
     # for security purpose we have token 

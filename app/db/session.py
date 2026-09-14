@@ -8,9 +8,10 @@ from sqlalchemy.ext.asyncio import (
 from app.core.config import settings
 
 DATABASE_URL = settings.database_url
-# asyncpg - driver
+# postgresql+asyncpg://postgres:your_password@localhost:5433/saas_db
+# asyncpg - use the async python driver to communicate with postgresql
 # postgres - postgresql username
-# localhost - postgresql running on my machine
+# localhost - connect postgresql server on the same machine where fastapi is running 
 # saas_db - is the db we are connecting to
 
 engine = create_async_engine(

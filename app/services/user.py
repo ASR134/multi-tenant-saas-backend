@@ -65,3 +65,14 @@ class UserService:
         await self.db.commit()
 
         return user
+
+
+    async def delete_user(
+            self,
+            user : User,
+    ):
+        user = await self.user_repository.delete(
+            user = user,
+        ) # type: ignore
+
+        await self.db.commit()
