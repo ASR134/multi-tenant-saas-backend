@@ -173,13 +173,13 @@ Example:
     POSTGRES_PASSWORD=your-password
     POSTGRES_DB=saas_db
 
-    DATABASE_URL=postgresql+asyncpg://postgres:your-password@localhost:5432/saas_db
+    DATABASE_URL=postgresql+asyncpg://postgres:your-password@localhost:5433/saas_db
 
     REDIS_URL=redis://localhost:6379
 
 ### 5. Start PostgreSQL and Redis
 
-    docker compose up -d postgres redis
+    docker compose up -d postgres redis worker
 
 ### 6. Run database migrations
 
@@ -201,7 +201,7 @@ Swagger Documentation:
 
 Run the test suite:
 
-    pytest
+    python -m pytest
 
 ## 🐳 Docker
 
@@ -209,7 +209,7 @@ The project includes Docker support for running the application and its services
 
 Start all services:
 
-    docker compose up
+    docker compose up -d
 
 Stop all services:
 
@@ -245,7 +245,6 @@ The core backend functionality is implemented, including:
 - Database migrations
 - Redis and Celery integration
 - Testing
-- Cloud deployment
 
 The Celery worker is implemented but its production deployment is currently pending.
 
