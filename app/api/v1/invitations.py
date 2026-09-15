@@ -45,13 +45,14 @@ async def create(
     currect_user : User = Depends(get_current_user),
     db : AsyncSession = Depends(get_db),
 ):
+    email = invitation_data.email.strip().lower()
 
     service = InvitationService(db)
 
     return await service.create_invitation(
         organization_id=organization_id,
         user_id=currect_user.id,
-        email=invitation_data.email,
+        email=email,
     )
 
 

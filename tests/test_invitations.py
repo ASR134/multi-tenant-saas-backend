@@ -223,7 +223,7 @@ async def test_accept_invitation(client,setup_database):
 
     assert data["organization_id"] == org_id_A
     assert data["status"] == "accepted"
-    assert data["email"] == "userB@example.com"
+    assert data["email"] == "userb@example.com"
     assert data["token"] == invitaion_token
 
 
@@ -385,5 +385,5 @@ async def test_get_invitations(client,setup_database):
     assert len(data) == 2
     assert data[0]["organization_id"] == org_id
     assert data[1]["organization_id"] == org_id
-    assert data[0]["email"] == "userB@example.com"
-    assert data[1]["email"] == "userC@example.com"
+    assert data[0]["email"] == "userb@example.com"
+    assert data[1]["email"] == "userc@example.com"

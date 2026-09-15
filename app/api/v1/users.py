@@ -24,11 +24,13 @@ async def create_user(
     user_data : UserCreate,
     db : AsyncSession = Depends(get_db)
 ):
+    email = user_data.email.strip().lower()
+
     service = UserService(db)
 
     try :
         user = await service.register_user(
-            email=user_data.email,
+            email=email,
             password=user_data.password,
             full_name=user_data.full_name,
         )
