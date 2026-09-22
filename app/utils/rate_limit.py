@@ -1,10 +1,10 @@
 from fastapi import HTTPException, status
 from app.db.redis import redis_client
+from app.core.config import settings
 
-
-EMAIL_IP_LIMIT = 5
-IP_LIMIT = 10
-WINDOW = 60 * 10 # 10 minutes
+EMAIL_IP_LIMIT = settings.login_email_ip_limit
+IP_LIMIT = settings.login_ip_limit
+WINDOW = settings.login_window
 
 async def check_login_rate_limit(
         email : str,

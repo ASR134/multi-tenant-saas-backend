@@ -7,7 +7,11 @@ class Settings(BaseSettings): # defines configuration our application expects
     access_token_expire_minutes : int 
     redis_url : str 
     database_url : str
-    
+    email_verification_token_expire_minutes : int
+    login_email_ip_limit : int
+    login_ip_limit : int
+    login_window : int
+
     model_config = SettingsConfigDict(
         env_file = ".env",
         extra="ignore"

@@ -66,3 +66,26 @@ async def login(
         "access_token" : access_token,
         "token_type" : "bearer"
     }
+
+
+@router.post(
+    "/verify-email"
+)
+async def verify_email(
+    token : str,
+    db : AsyncSession = Depends(get_db),
+):
+    service = UserService(db)
+
+    try:
+        user = await service.verify_email(token)
+
+        return {
+            "message" : "Email verified successfully",
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )

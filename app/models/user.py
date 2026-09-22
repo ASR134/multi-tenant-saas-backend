@@ -2,7 +2,7 @@
 from datetime import datetime # python datetime type
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String,DateTime,func
+from sqlalchemy import String, DateTime, func, false
 from sqlalchemy.orm import Mapped,mapped_column,relationship
 
 from app.db.base import Base
@@ -47,6 +47,20 @@ class User(Base):
         # default=lambda: datetime.now(timezone.utc) # python side default
     )
 
+    email_verified : Mapped[bool] = mapped_column(
+        server_default=false(),
+        nullable=False,
+    )
+
+    verification_token_hash : Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+
+    verification_token_expires_at : Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
 
     memberships : Mapped[list["Membership"]] = relationship(
         back_populates="user",
