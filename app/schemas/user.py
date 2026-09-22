@@ -10,6 +10,7 @@ class UserResponse(BaseModel):
     id : int
     email : EmailStr
     full_name : str
+    email_verified : bool
 
     model_config = {
         "from_attributes" : True # sqlalchemy will give object not dictionary. pydantic needs to know that it can construct the response schema from object attributes.

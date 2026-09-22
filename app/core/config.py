@@ -11,6 +11,9 @@ class Settings(BaseSettings): # defines configuration our application expects
     login_email_ip_limit : int
     login_ip_limit : int
     login_window : int
+    resend_api_key : str
+    email_from : str
+    frontend_url : str
 
     model_config = SettingsConfigDict(
         env_file = ".env",
