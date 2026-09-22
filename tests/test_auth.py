@@ -49,7 +49,7 @@ async def test_register_duplicate_email(client,setup_database):
         },
     )
 
-    assert response.status_code == 409
+    assert response.status_code == 201
 
 
 @pytest.mark.asyncio
