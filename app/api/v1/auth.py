@@ -6,6 +6,7 @@ from fastapi import Request
 
 from app.db.session import get_db
 from app.schemas.user import Token
+from app.schemas.email import ResendVerificationRequest
 from app.services.user import UserService
 from app.utils.security import create_access_token
 from app.utils.rate_limit import check_login_rate_limit, record_failed_login, reset_login_attempts
@@ -89,3 +90,17 @@ async def verify_email(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
+
+
+@router.post("/resend-verification")
+async def resend_verification(
+    request : ResendVerificationRequest,
+    db : AsyncSession = Depends(get_db),
+):
+    service = UserService(db)
+
+    await service.resend_verification_email(request.email)
+
+    return {
+        "message" : "Verification email has been sent."
+    }

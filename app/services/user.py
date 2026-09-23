@@ -139,3 +139,32 @@ class UserService:
         await self.db.commit()
 
         return user
+
+
+
+    async def resend_verification_email(
+            self,
+            email : str,
+    ):
+        user = await self.user_repository.get_by_email(email)
+
+        if not user:
+            return
+
+        if user.email_verified:
+            return
+        # both if will return the same message to avoid attacker to get any information
+        
+        verification_token = generate_verification_token()
+        verification_token_hash = hash_verification_token(verification_token)
+        verification_token_expiry = get_verification_expiry()
+
+        user.verification_token_hash = verification_token_hash
+        user.verification_token_expires_at = verification_token_expiry
+
+        await self.db.commit()
+
+        await self.email_service.send_verification_email(
+            email=email,
+            verification_token=verification_token,
+        )
