@@ -6,6 +6,7 @@ from app.models.user import User
 from app.utils.security import hash_password, verify_password
 from app.utils.email_verification import generate_verification_token, hash_verification_token, get_verification_expiry
 from datetime import datetime, timezone
+from app.utils.password_reset import get_password_reset_expiry, hash_password_reset_token, generate_password_reset_token
 
 
 class UserService:
@@ -154,7 +155,7 @@ class UserService:
         if user.email_verified:
             return
         # both if will return the same message to avoid attacker to get any information
-        
+
         verification_token = generate_verification_token()
         verification_token_hash = hash_verification_token(verification_token)
         verification_token_expiry = get_verification_expiry()
@@ -168,3 +169,60 @@ class UserService:
             email=email,
             verification_token=verification_token,
         )
+
+
+    async def forgot_password(
+            self,
+            email : str,
+    ):
+
+        user = await self.user_repository.get_by_email(email)
+
+        if not user:
+            return
+
+        if not user.email_verified: # coz email membership must belong to user
+            return
+
+        reset_password_token = generate_password_reset_token()
+
+        user.password_reset_token_hash = hash_password_reset_token(reset_password_token)
+        user.password_reset_token_expires_at = get_password_reset_expiry()
+
+        await self.db.commit()
+
+        await self.email_service.send_password_reset_email(
+            email = email,
+            reset_token = reset_password_token,
+        )
+
+
+    async def reset_password(
+            self,
+            token : str,
+            new_password : str,
+    ):
+
+        token_hash = hash_password_reset_token(token)
+
+        user = await self.user_repository.get_by_password_reset_token_hash(
+            token_hash
+        )
+
+        if not user:
+            raise ValueError("Invalid link")
+
+        if (
+            user.password_reset_token_expires_at is None
+            or user.password_reset_token_expires_at <= datetime.now(timezone.utc)
+        ):
+            raise ValueError("Password reset token has expired")
+
+        user.password_hash = hash_password(new_password)
+
+        user.password_reset_token_hash = None
+        user.password_reset_token_expires_at = None
+
+        await self.db.commit()
+
+        return user

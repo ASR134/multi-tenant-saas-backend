@@ -62,6 +62,16 @@ class User(Base):
         nullable=True,
     )
 
+    password_reset_token_hash : Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
+    password_reset_token_expires_at : Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    
     memberships : Mapped[list["Membership"]] = relationship(
         back_populates="user",
         passive_deletes=True,# Let the database handle what happens to these child rows when the parent is deleted . Don't let SQLAlchemy manage the delete behaviour 

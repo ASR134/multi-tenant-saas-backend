@@ -6,7 +6,7 @@ from fastapi import Request
 
 from app.db.session import get_db
 from app.schemas.user import Token
-from app.schemas.email import ResendVerificationRequest
+from app.schemas.auth import ResendVerificationRequest, ForgetPasswordReset, ResetPasswordRequest
 from app.services.user import UserService
 from app.utils.security import create_access_token
 from app.utils.rate_limit import check_login_rate_limit, record_failed_login, reset_login_attempts
@@ -73,7 +73,7 @@ async def login(
     "/verify-email"
 )
 async def verify_email(
-    token : str,
+    token : str,# frontend fetches token from url and backend recieves it as query parameter
     db : AsyncSession = Depends(get_db),
 ):
     service = UserService(db)
@@ -97,10 +97,53 @@ async def resend_verification(
     request : ResendVerificationRequest,
     db : AsyncSession = Depends(get_db),
 ):
+    email = request.email.strip().lower()
+
     service = UserService(db)
 
-    await service.resend_verification_email(request.email)
+    await service.resend_verification_email(email)
 
     return {
-        "message" : "Verification email has been sent."
+        "message" : "Verification email has been sent",# "If an account exists with this email, a verification link has been sent."
+    }
+
+
+@router.post("/forget-password")
+async def forget_password(
+    request : ForgetPasswordReset,
+    db : AsyncSession =  Depends(get_db),
+):
+    email = request.email.strip().lower()
+
+    service = UserService(db)
+
+    await service.forgot_password(email)
+
+    return {
+        "message" : "Password reset link has been sent",# "If an account exists with this email, a password reset link has been sent."
+    }
+
+
+@router.post("/reset-password")
+async def reset_password(
+    request : ResetPasswordRequest,
+    db : AsyncSession = Depends(get_db),
+):
+    service = UserService(db)
+
+    try:
+
+        await service.reset_password(
+            token=request.token,
+            new_password=request.new_password,
+        )
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+    return {
+        "message" : "Password reset successfully",
     }

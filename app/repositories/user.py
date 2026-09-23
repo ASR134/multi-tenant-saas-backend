@@ -82,3 +82,16 @@ class UserRepository:
         await self.db.delete(user)
 
         await self.db.flush()
+
+
+    async def get_by_password_reset_token_hash(
+    self,
+    token_hash: str,
+    ):
+        result = await self.db.execute(
+            select(User).where(
+                User.password_reset_token_hash == token_hash
+            )
+        )
+
+        return result.scalar_one_or_none()
