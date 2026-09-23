@@ -40,9 +40,4 @@ class EmailService:
             """,
         }
 
-        # return await resend.Emails.send_async(params) # returns response from resend's api
-        response = await resend.Emails.send_async(params)
-
-        print("RESEND RESPONSE:", response)
-
-        return response
+        return await resend.Emails.send_async(params) # returns response from resend's api
