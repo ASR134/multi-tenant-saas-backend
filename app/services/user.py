@@ -80,11 +80,14 @@ class UserService:
         user = await self.user_repository.get_by_email(email)
 
         if not user:
-            return None
+            raise ValueError("Invalid email or password")
 
         if not verify_password(password,user.password_hash):
-            return None
+            raise ValueError("Invalid email or password")
 
+        if not user.email_verified:
+            raise ValueError("Please verify your email before logging in")
+        
         return user # User model class object
 
 

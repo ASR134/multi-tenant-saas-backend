@@ -38,19 +38,19 @@ async def login(
 
     service = UserService(db)
 
-    user = await service.authenticate_user(
-        email=email, # email
-        password=form_data.password,
-    )
-
-    if not user:
+    try:
+        user = await service.authenticate_user(
+            email=email, # email
+            password=form_data.password,
+        )
+    except ValueError as e:
         await record_failed_login(
             email=email,
             ip = client_ip,
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail=str(e),
         )
 
     await reset_login_attempts(
