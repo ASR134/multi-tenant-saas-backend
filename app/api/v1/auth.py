@@ -81,15 +81,15 @@ async def verify_email(
     try:
         user = await service.verify_email(token)
 
-        return {
-            "message" : "Email verified successfully",
-        }
-
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
+
+    return {
+                "message" : "Email verified successfully",
+            }
 
 
 @router.post("/resend-verification")
@@ -104,7 +104,7 @@ async def resend_verification(
     await service.resend_verification_email(email)
 
     return {
-        "message" : "Verification email has been sent",# "If an account exists with this email, a verification link has been sent."
+        "message" : "Verification link has been sent",# "If an account exists with this email, a verification link has been sent."
     }
 
 
