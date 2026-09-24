@@ -25,7 +25,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://multi-tenant-saas-frontend-lovat.vercel.app/",  # deployed Vercel URL
+        "https://multi-tenant-saas-frontend-lovat.vercel.app",  # deployed Vercel URL
         "http://localhost:5173",             # Vite's default local dev port
     ],
     allow_credentials=True,
