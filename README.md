@@ -208,17 +208,6 @@ Docker Compose includes:
 
 ## ☁️ Deployment
 
-
-### Production Services
-
-| Service             | Provider | Status     |
-| ------------------- | -------- | ---------- |
-| FastAPI Backend     | Render   | Deployed   |
-| PostgreSQL          | Neon     | Deployed   |
-| Redis               | Render   | Configured |
-| Celery Worker       | Render   | Pending    |
-| Transactional Email | Resend   | Configured |
-
 ### API Domain
 
 The backend is available through:
