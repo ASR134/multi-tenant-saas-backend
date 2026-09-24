@@ -65,7 +65,7 @@ The project implements authentication, email verification, password recovery, or
 - **Database:** PostgreSQL
 - **ORM:** SQLAlchemy
 - **Authentication:** JWT
-- **Password Hashing:** Argon2
+- **Password Hashing:** Argon2id
 - **Database Driver:** asyncpg
 - **Migrations:** Alembic
 - **Caching / Rate Limiting:** Redis
