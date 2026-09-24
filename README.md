@@ -247,47 +247,6 @@ The backend includes several security mechanisms:
 
 Password recovery endpoints intentionally use generic responses to avoid revealing whether an email address is registered.
 
----
-
-## 📌 Project Status
-
-### Completed
-
-* User authentication
-* JWT authentication
-* Email verification
-* Resend verification email
-* Password recovery
-* Password reset
-* Login rate limiting
-* Multi-tenancy
-* Organizations
-* Memberships
-* Tenant-based authorization
-* Projects
-* Tasks
-* Comments
-* Invitations
-* PostgreSQL integration
-* Redis integration
-* Celery integration
-* Alembic migrations
-* Docker setup
-* Unit tests
-* Integration tests
-* Production backend deployment
-* Neon PostgreSQL deployment
-* Resend transactional email
-* Custom API domain
-
-### Pending
-
-* Production Celery worker deployment
-* Frontend application
-* Frontend deployment
-* Frontend/API integration
-
----
 
 ## 👨‍💻 Author
 
