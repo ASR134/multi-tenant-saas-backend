@@ -1,25 +1,63 @@
 # Multi-Tenant SaaS Backend
 
-A multi-tenant SaaS backend built with **FastAPI**, **PostgreSQL**, **SQLAlchemy**, **Redis**, and **Celery**.
+A production-oriented multi-tenant SaaS backend built with **FastAPI**, **PostgreSQL**, **SQLAlchemy**, **Redis**, and **Celery**.
 
-The project implements authentication, organizations, memberships, tenant-based access, projects, tasks, comments, invitations, and background task processing.
+The project implements authentication, email verification, password recovery, organizations, memberships, tenant-based authorization, projects, tasks, comments, invitations, background task processing, rate limiting, and automated testing.
 
 ## 🚀 Features
 
+### Authentication & Security
+
 - JWT Authentication
-- User Management
+- User Registration & Login
+- Email Verification
+- Resend Verification Email
+- Forgot Password
+- Password Reset
+- Password Hashing
+- Login Rate Limiting
+- Secure Token Generation
+- Hashed Verification & Password Reset Tokens
+- Token Expiration
+- Protected Routes
+
+### Multi-Tenancy
+
 - Multi-Tenant Organizations
 - Organization Memberships
-- Tenant-based Authorization
-- Projects & Tasks
+- Tenant-Based Authorization
+- Organization-Level Access Control
+- Role-Based Membership Handling
+
+### Application Features
+
+- User Management
+- Organizations
+- Projects
+- Tasks
 - Comments
 - Invitations
+
+### Infrastructure
+
 - Redis Integration
 - Celery Background Tasks
-- Async PostgreSQL with SQLAlchemy
+- Async PostgreSQL
+- SQLAlchemy ORM
 - Alembic Database Migrations
 - Docker & Docker Compose
 - Unit & Integration Tests
+
+### Email
+
+- Transactional Email using Resend
+- Email Verification Emails
+- Resend Verification Emails
+- Password Reset Emails
+- Custom Verified Sending Domain
+- `noreply@mail.stackwork.dev` sender
+
+---
 
 ## 🛠️ Tech Stack
 
@@ -27,13 +65,20 @@ The project implements authentication, organizations, memberships, tenant-based 
 - **Database:** PostgreSQL
 - **ORM:** SQLAlchemy
 - **Authentication:** JWT
+- **Password Hashing:** Argon2
 - **Database Driver:** asyncpg
 - **Migrations:** Alembic
+- **Caching / Rate Limiting:** Redis
 - **Background Tasks:** Celery
 - **Message Broker:** Redis
+- **Email:** Resend
+- **Validation:** Pydantic
 - **Testing:** Pytest
 - **Containerization:** Docker
-- **Deployment:** Render + Neon
+- **Production Backend:** Render
+- **Production Database:** Neon PostgreSQL
+
+---
 
 ## 📁 Project Structure
 
@@ -107,6 +152,8 @@ multi_tenant_saas_system/
 │   │   └── user.py
 │   │
 │   ├── utils/
+│   │   ├── email_verification.py
+│   │   ├── password_reset.py
 │   │   └── security.py
 │   │
 │   ├── worker/
@@ -140,116 +187,228 @@ multi_tenant_saas_system/
 └── requirements.txt
 ```
 
+
 ## ⚙️ Local Setup
 
 ### 1. Clone the repository
 
-    git clone https://github.com/ASR134/multi-tenant-saas-backend.git
-    cd multi-tenant-saas-backend
+```bash
+git clone https://github.com/ASR134/multi-tenant-saas-backend.git
+cd multi-tenant-saas-backend
+```
 
 ### 2. Create a virtual environment
 
-    python -m venv venv
+```bash
+python -m venv venv
+```
 
 Activate it on Windows:
 
-    venv\Scripts\activate
+```bash
+venv\Scripts\activate
+```
 
 ### 3. Install dependencies
 
-    pip install -r requirements.txt
+```bash
+pip install -r requirements.txt
+```
 
 ### 4. Configure environment variables
 
 Create a `.env` file using `.env.example` as a reference.
 
-Example:
-
-    SECRET_KEY=your-secret-key
-    ALGORITHM=HS256
-    ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-    POSTGRES_USER=postgres
-    POSTGRES_PASSWORD=your-password
-    POSTGRES_DB=saas_db
-
-    DATABASE_URL=postgresql+asyncpg://postgres:your-password@localhost:5433/saas_db
-
-    REDIS_URL=redis://localhost:6379
 
 ### 5. Start PostgreSQL and Redis
 
-    docker compose up -d postgres redis worker
+```bash
+docker compose up -d postgres redis
+```
+
+The local PostgreSQL container uses:
+
+```text
+Host: localhost
+Port: 5433
+```
+
+while PostgreSQL inside Docker uses:
+
+```text
+Port: 5432
+```
 
 ### 6. Run database migrations
 
-    alembic upgrade head
+```bash
+alembic upgrade head
+```
 
 ### 7. Start FastAPI
 
-    uvicorn app.main:app --reload
+```bash
+uvicorn app.main:app --reload
+```
 
 API:
 
-    http://localhost:8000
+```text
+http://localhost:8000
+```
 
 Swagger Documentation:
 
-    http://localhost:8000/docs
+```text
+http://localhost:8000/docs
+```
+
+---
 
 ## 🧪 Testing
 
-Run the test suite:
+Run the complete test suite:
 
-    python -m pytest
+```bash
+python -m pytest
+```
+
+The project contains:
+
+* API tests
+* Authentication tests
+* Organization tests
+* Project tests
+* Task tests
+* Comment tests
+* Invitation tests
+* Unit tests
+
+The test environment uses PostgreSQL and Redis.
+
+---
 
 ## 🐳 Docker
 
-The project includes Docker support for running the application and its services.
+The project includes Docker support for running the application and infrastructure locally.
 
 Start all services:
 
-    docker compose up -d
+```bash
+docker compose up -d
+```
 
 Stop all services:
 
-    docker compose down
+```bash
+docker compose down
+```
 
 Docker Compose includes:
 
-- PostgreSQL
-- Redis
-- FastAPI
-- Celery Worker
+* PostgreSQL
+* Redis
+* FastAPI
+* Celery Worker
+
+---
 
 ## ☁️ Deployment
 
-The current production setup uses:
 
-    FastAPI      → Render
-    PostgreSQL   → Neon
-    Redis        → Render
-    Celery       → Not deployed yet
+### Production Services
 
-The FastAPI application is deployed on Render without using Docker.
+| Service             | Provider | Status     |
+| ------------------- | -------- | ---------- |
+| FastAPI Backend     | Render   | Deployed   |
+| PostgreSQL          | Neon     | Deployed   |
+| Redis               | Render   | Configured |
+| Celery Worker       | Render   | Pending    |
+| Transactional Email | Resend   | Configured |
+
+### API Domain
+
+The backend is available through:
+
+```text
+https://api.stackwork.dev
+```
+
+
+### Email Domain
+
+Resend uses:
+
+```text
+mail.stackwork.dev
+```
+
+for transactional email sending.
+
+---
+
+## 🔑 Security
+
+The backend includes several security mechanisms:
+
+* JWT-based authentication
+* Password hashing
+* Email verification
+* Password reset tokens
+* Token expiration
+* Single-use verification/reset tokens
+* Login rate limiting using Redis
+* Generic responses for password recovery
+* Tenant-based authorization
+* Organization membership checks
+* Environment-based secret management
+
+Password recovery endpoints intentionally use generic responses to avoid revealing whether an email address is registered.
+
+---
 
 ## 📌 Project Status
 
-The core backend functionality is implemented, including:
+### Completed
 
-- Authentication
-- Multi-tenancy
-- Organizations and memberships
-- Projects and tasks
-- Comments and invitations
-- Database migrations
-- Redis and Celery integration
-- Testing
+* User authentication
+* JWT authentication
+* Email verification
+* Resend verification email
+* Password recovery
+* Password reset
+* Login rate limiting
+* Multi-tenancy
+* Organizations
+* Memberships
+* Tenant-based authorization
+* Projects
+* Tasks
+* Comments
+* Invitations
+* PostgreSQL integration
+* Redis integration
+* Celery integration
+* Alembic migrations
+* Docker setup
+* Unit tests
+* Integration tests
+* Production backend deployment
+* Neon PostgreSQL deployment
+* Resend transactional email
+* Custom API domain
 
-The Celery worker is implemented but its production deployment is currently pending.
+### Pending
+
+* Production Celery worker deployment
+* Frontend application
+* Frontend deployment
+* Frontend/API integration
+
+---
 
 ## 👨‍💻 Author
 
 **ASR134**
 
-GitHub: https://github.com/ASR134/multi-tenant-saas-backend
+GitHub: [https://github.com/ASR134/multi-tenant-saas-backend](https://github.com/ASR134/multi-tenant-saas-backend)
