@@ -17,15 +17,15 @@ class InvitationRepository:
             organization_id : int,
             email : str,
             invited_by : int,
-            token : str,
-            expires_at : datetime,
+            invitation_token_hash : str,
+            invitation_token_expires_at : datetime,
     ):
         invitation = Invitation(
             organization_id=organization_id,
             email = email,
-            token = token,
+            invitation_token_hash = invitation_token_hash ,
             invited_by = invited_by,
-            expires_at = expires_at,
+            invitation_token_expires_at= invitation_token_expires_at,
         )
 
         self.db.add(invitation)
@@ -35,13 +35,13 @@ class InvitationRepository:
         return invitation
 
 
-    async def get_by_token( # gives unique invitation if valid token
+    async def get_by_invitation_token_hash( # gives unique invitation if valid token
             self,
-            token : str,
+            invitation_token_hash : str,
     ):
 
         result = await self.db.execute(select(Invitation).where(
-            Invitation.token == token,
+            Invitation.invitation_token_hash == invitation_token_hash,
         ))
 
         return result.scalar_one_or_none()
@@ -56,6 +56,20 @@ class InvitationRepository:
         ).order_by(Invitation.id))
 
         return result.scalars().all()
+
+
+    async def get_by_org_id_and_email( # used to get any invitation (whther pending or accepted) for given org_id and email.
+            self,
+            organization_id : int,
+            email : str,
+    ):
+
+        invitation = await self.db.execute(select(Invitation).where(
+            Invitation.organization_id == organization_id,
+            Invitation.email == email,
+        ))
+
+        return invitation.scalar_one_or_none()
 
 
     async def update_status(

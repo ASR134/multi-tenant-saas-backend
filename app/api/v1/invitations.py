@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status, Depends, HTTPException, status
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,27 +16,26 @@ router = APIRouter(
 )
 
 
-@router.post( 
-    "/accept",
-    response_model=InvitationResponse,
-)
-async def accept_invitation(
-    token : str, # query parameter
-    db : AsyncSession = Depends(get_db),
-    current_user : User = Depends(get_current_user),
-):
-    service = InvitationService(db)
+# @router.post( 
+#     "/accept",
+#     response_model=InvitationResponse,
+# )
+# async def accept_invitation(
+#     token : str, # query parameter
+#     db : AsyncSession = Depends(get_db),
+#     current_user : User = Depends(get_current_user),
+# ):
+#     service = InvitationService(db)
 
-    return await service.accept_invitation(
-        token = token,
-        user_id = current_user.id,
-        user_email= current_user.email,
-    )
+#     return await service.accept_invitation(
+#         token = token,
+#         user_id = current_user.id,
+#         user_email= current_user.email,
+#     )
 
 # static routes first then dynamic routes in fastapi
 @router.post(
     "/{organization_id}",
-    response_model=InvitationResponse,
     status_code=status.HTTP_201_CREATED,
 )
 async def create(
@@ -45,15 +44,25 @@ async def create(
     currect_user : User = Depends(get_current_user),
     db : AsyncSession = Depends(get_db),
 ):
+    
     email = invitation_data.email.strip().lower()
 
     service = InvitationService(db)
 
-    return await service.create_invitation(
-        organization_id=organization_id,
-        user_id=currect_user.id,
-        email=email,
-    )
+    try: 
+        invitation = await service.create_invitation(
+            organization_id=organization_id,
+            user_id=currect_user.id,
+            email=email,
+        )
+
+        return invitation
+    
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
 
 
 @router.get(

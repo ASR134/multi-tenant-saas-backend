@@ -30,28 +30,28 @@ class Invitation(Base):
         nullable=True,
     )
 
+    created_at : Mapped[datetime] = mapped_column(
+            DateTime(timezone=True),
+            nullable=False,
+            server_default=func.now()
+        )
+    
+    status : Mapped[str] = mapped_column(
+            String(100),
+            nullable=False,
+            server_default="pending",
+        )
+    
     # for security purpose we have token 
-    token : Mapped[str] = mapped_column(
+    invitation_token_hash : Mapped[str] = mapped_column(
         String(255),
         unique=True,
-        nullable=False,
+        nullable=True,
     )
 
-    status : Mapped[str] = mapped_column(
-        String(100),
-        nullable=False,
-        default="pending",
-    )
-
-    created_at : Mapped[datetime] = mapped_column(
+    invitation_token_expires_at : Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        nullable=False,
-        server_default=func.now()
-    )
-
-    expires_at : Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
+        nullable=True,
     )
 
     organization : Mapped["Organization"] = relationship(

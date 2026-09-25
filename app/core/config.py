@@ -15,6 +15,7 @@ class Settings(BaseSettings): # defines configuration our application expects
     email_from : str
     frontend_url : str
     password_reset_token_expire_minutes : int
+    invitation_token_expire_days : int
 
     model_config = SettingsConfigDict(
         env_file = ".env",

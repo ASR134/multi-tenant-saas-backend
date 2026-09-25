@@ -12,10 +12,8 @@ class InvitationResponse(BaseModel):
     organization_id : int
     email : EmailStr
     invited_by : int
-    token : str
     status : str
     created_at : datetime
-    expires_at : datetime
 
     model_config = {
         'from_attributes' : True,
