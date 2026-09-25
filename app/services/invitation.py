@@ -5,10 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.membership import Membership
 from app.repositories.membership import MembershipRepository
 from app.repositories.invitation import InvitationRepository
+from app.repositories.organization import OrganizationRepository
 
 from fastapi import HTTPException, status
 from datetime import datetime, timezone
 from app.utils.invitation import generate_invitation_token, hash_invitation_token, get_invitation_expiry
+from app.services.email import EmailService
 
 
 class InvitationService:
@@ -17,6 +19,8 @@ class InvitationService:
         self.db = db
         self.membership_repository = MembershipRepository(db)
         self.invitation_repository = InvitationRepository(db)
+        self.email_service = EmailService()
+        self.organization_repo = OrganizationRepository(db)
 
 
     async def create_invitation(
@@ -57,7 +61,16 @@ class InvitationService:
 
             await self.db.commit()
 
-            # later will implement sending invitation email
+            organization = await self.organization_repo.get_by_organization_id(
+                organization_id=organization_id,
+                user_id=user_id,
+            )
+
+            await self.email_service.send_invitation_email(
+                email=email,
+                invitation_token=invitation_token,
+                organization_name=organization.name, # type: ignore
+            )
 
             return invitation
 
@@ -76,7 +89,17 @@ class InvitationService:
         await self.db.commit() 
         await self.db.refresh(invitation)
 
-        # later will implement sending invitation email
+        organization = await self.organization_repo.get_by_organization_id(
+            organization_id=organization_id,
+            user_id=user_id,
+        )
+        
+        await self.email_service.send_invitation_email(
+            email=email,
+            invitation_token=invitation_token,
+            organization_name=organization.name, # type: ignore
+        
+        )
         return invitation
 
 

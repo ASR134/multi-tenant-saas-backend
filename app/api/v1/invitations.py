@@ -36,6 +36,7 @@ router = APIRouter(
 # static routes first then dynamic routes in fastapi
 @router.post(
     "/{organization_id}",
+    response_model=InvitationResponse,
     status_code=status.HTTP_201_CREATED,
 )
 async def create(

@@ -80,3 +80,49 @@ class EmailService:
         }
 
         return await resend.Emails.send_async(params)
+
+
+    async def send_invitation_email(
+            self,
+            email : str,
+            invitation_token : str,
+            organization_name : str,
+    ):
+
+        invitation_url = f"{settings.frontend_url}/accept-invitation/token={invitation_token}"
+
+        params: resend.Emails.SendParams = {
+            "from": settings.email_from,
+            "to": [email],
+            "subject": f"You're invited to join {organization_name}",
+            "html": f"""
+                <h2>You're invited to join {organization_name}</h2>
+
+                <p>
+                    You have been invited to become a member of
+                    <strong>{organization_name}</strong>.
+                </p>
+
+                <p>
+                    Click the button below to accept the invitation
+                    and join the organization.
+                </p>
+
+                <p>
+                    <a href="{invitation_url}">
+                        Accept Invitation
+                    </a>
+                </p>
+
+                <p>
+                    This invitation will expire in a few days.
+                </p>
+
+                <p>
+                    If you were not expecting this invitation, you can safely
+                    ignore this email.
+                </p>
+            """,
+        }
+
+        return await resend.Emails.send_async(params)
