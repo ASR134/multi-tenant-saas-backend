@@ -26,7 +26,6 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://www.stackwork.dev",
-        "https://stackwork.dev",
         "https://multi-tenant-saas-frontend-lovat.vercel.app",  # deployed Vercel URL
         "http://localhost:5173",             # Vite's default local dev port
     ],
