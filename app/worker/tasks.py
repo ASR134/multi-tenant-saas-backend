@@ -1,13 +1,13 @@
 from app.worker.celery_app import celery_app
 from app.services.email import EmailService
 import logging
-
+import asyncio
 
 logger = logging.getLogger(__name__)
 
 
 @celery_app.task(bind=True,max_retries=3) # this tells celery that this function is a task, worker can execute
-async def send_invitation_accepted_notification(
+def send_invitation_accepted_notification(
     self,
     inviter_email : str,
     invitee_email : str,
@@ -17,10 +17,11 @@ async def send_invitation_accepted_notification(
     email_service = EmailService()
 
     try : 
-        await email_service.send_invitation_accepted_notification(
-            inviter_email=inviter_email,
-            invitee_email = invitee_email,
-            organization_name=organization_name,
+        asyncio.run(email_service.send_invitation_accepted_notification(
+                inviter_email=inviter_email,
+                invitee_email = invitee_email,
+                organization_name=organization_name,
+            )
         )
     except Exception as exc:
         logger.warning(

@@ -151,3 +151,5 @@ class EmailService:
                 </p>
             """,
         }
+
+        return await resend.Emails.send_async(params)
