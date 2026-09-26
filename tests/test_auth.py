@@ -1,5 +1,6 @@
 import pytest
-
+from app.models.user import User
+from sqlalchemy import select
 
 # ------------------------------------------------- Testing register endpoint ("/api/v1/users")
 
@@ -84,7 +85,16 @@ async def test_login_user(client,setup_database):
             "full_name":"login_user",
         },
     )
+    async with TestSessionLocal() as session:
+        result = await session.execute(
+            select(User).where(User.email == "login@example.com")
+        )
 
+        user = result.scalar_one()
+
+        user.email_verified = True
+
+        await session.commit()
     # now login
 
     response = await client.post(
@@ -94,7 +104,7 @@ async def test_login_user(client,setup_database):
             "password":"123",
         },
     )
-
+    
     assert response.status_code == 200
 
     data = response.json() 

@@ -5,12 +5,20 @@ from httpx import ASGITransport, AsyncClient
 # instead of sending the request through 127.0.0.1:8000
 import pytest_asyncio
 
+import os
+
+os.environ["REDIS_URL"] = "redis://localhost:6379" # should be imported before app. coz settings = Settings() is created when application modules are imported
+# this is done coz redis is running as a service inside container . so we have done port mapping.
+from app.main import app
 from app.main import app
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from app.db.base import Base
 from app.db.session import get_db
 from sqlalchemy.pool import NullPool
+
+from unittest.mock import AsyncMock
+from app.services.email import EmailService
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
@@ -75,3 +83,32 @@ async def override_get_db():
 
 app.dependency_overrides[get_db] = override_get_db # so whenever client requests needs
 # fastapi overrides get_db with this function.
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def mock_email_service(monkeypatch):# monkeypatch is built in python fixture
+
+    monkeypatch.setattr(# changes EmailService.send_verification_email with AsyncMock()
+        EmailService,
+        "send_verification_email",
+        AsyncMock(),
+    )
+
+    monkeypatch.setattr(
+        EmailService,
+        "send_password_reset_email",
+        AsyncMock(),
+    )
+
+    monkeypatch.setattr(
+        EmailService,
+        "send_invitation_email",
+        AsyncMock(),
+    )
+
+    monkeypatch.setattr(
+        EmailService,
+        "send_invitation_accepted_notification",
+        AsyncMock(),
+    )
+
