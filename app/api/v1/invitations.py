@@ -16,22 +16,25 @@ router = APIRouter(
 )
 
 
-# @router.post( 
-#     "/accept",
-#     response_model=InvitationResponse,
-# )
-# async def accept_invitation(
-#     token : str, # query parameter
-#     db : AsyncSession = Depends(get_db),
-#     current_user : User = Depends(get_current_user),
-# ):
-#     service = InvitationService(db)
+@router.post( 
+    "/accept",
+)
+async def accept_invitation(
+    token : str, # query parameter
+    db : AsyncSession = Depends(get_db),
+    current_user : User = Depends(get_current_user),
+):
+    service = InvitationService(db)
 
-#     return await service.accept_invitation(
-#         token = token,
-#         user_id = current_user.id,
-#         user_email= current_user.email,
-#     )
+    await service.accept_invitation(
+        invitation_token = token,
+        user_id = current_user.id,
+        user_email= current_user.email,
+    )
+
+    return {
+        "message" : "Invitation accepted succesfully",
+    }
 
 # static routes first then dynamic routes in fastapi
 @router.post(

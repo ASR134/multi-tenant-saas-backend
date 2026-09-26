@@ -6,6 +6,7 @@ class Settings(BaseSettings): # defines configuration our application expects
     algorithm : str 
     access_token_expire_minutes : int 
     redis_url : str 
+    celery_redis_url : str
     database_url : str
     email_verification_token_expire_minutes : int
     login_email_ip_limit : int

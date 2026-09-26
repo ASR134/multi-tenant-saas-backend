@@ -43,13 +43,13 @@ class Invitation(Base):
         )
     
     # for security purpose we have token 
-    invitation_token_hash : Mapped[str] = mapped_column(
+    invitation_token_hash : Mapped[str | None] = mapped_column(
         String(255),
         unique=True,
         nullable=True,
     )
 
-    invitation_token_expires_at : Mapped[datetime] = mapped_column(
+    invitation_token_expires_at : Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )

@@ -1,14 +1,29 @@
 from app.worker.celery_app import celery_app
+from app.services.email import EmailService
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 
 @celery_app.task(bind=True,max_retries=3) # this tells celery that this function is a task, worker can execute
-def send_invitation_notification(self,invitation_id:int):
+async def send_invitation_accepted_notification(
+    self,
+    inviter_email : str,
+    invitee_email : str,
+    organization_name : str,
+):
+
+    email_service = EmailService()
 
     try : 
-        print(f"Sending notification for invitation {invitation_id}")
-        
-        # stimulate sending notification
-        print("Invitation notification sent sucessfully!")
-
+        await email_service.send_invitation_accepted_notification(
+            inviter_email=inviter_email,
+            invitee_email = invitee_email,
+            organization_name=organization_name,
+        )
     except Exception as exc:
-        print("Notification failed. Retrying...")
+        logger.warning(
+            "Invitation acceptance notification failed. Retrying..."
+        )
         raise self.retry(exc=exc, countdown = 5)

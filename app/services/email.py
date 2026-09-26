@@ -126,3 +126,28 @@ class EmailService:
         }
 
         return await resend.Emails.send_async(params)
+
+
+    async def send_invitation_accepted_notification(# this is to notify the inviter
+            self,
+            inviter_email : str,
+            invitee_email : str,
+            organization_name : str,
+    ):
+        params: resend.Emails.SendParams = {
+            "from": settings.email_from,
+            "to": [inviter_email],
+            "subject": "Invitation accepted",
+            "html": f"""
+                <h2>Invitation Accepted</h2>
+
+                <p>
+                    <strong>{invitee_email}</strong> has accepted your invitation
+                    and joined <strong>{organization_name}</strong>.
+                </p>
+
+                <p>
+                    They are now a member of your organization.
+                </p>
+            """,
+        }
