@@ -55,8 +55,8 @@ async def client():# fixture scope = function by default -> 100 tests, fixture i
 
 
 @pytest_asyncio.fixture
-async def setup_database():
-
+async def setup_database():# fixture scope = function by default
+    # creates tables for test and drops them after test completion
     async with test_engine.begin() as connection:
         await connection.run_sync(
             Base.metadata.create_all
