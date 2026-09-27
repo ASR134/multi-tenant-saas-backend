@@ -16,7 +16,7 @@ DATABASE_URL = settings.database_url
 
 engine = create_async_engine(
     DATABASE_URL,
-    echo = True, # tells sqlalchemy to pring sql statements it sends to postgresql
+    # echo = True, # tells sqlalchemy to print sql statements it sends to postgresql
 )
 
 # later we will turn it off coz we don't want noisy sql logs in production

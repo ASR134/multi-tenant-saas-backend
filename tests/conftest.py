@@ -1,69 +1,63 @@
-# this file contains all the fixtures
+# this file contains all fixtures
+# fixture - no calling required, scoping and caching, autouse
+import os
+from dotenv import load_dotenv
+
+import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 # AsyncClient - lets our test make http requests (programmatic version of swagger/postman)
 # ASGITransport - allows httpx to communicate directly with fastapi app inside test
 # instead of sending the request through 127.0.0.1:8000
-import pytest_asyncio
 
-import os
-
-os.environ["REDIS_URL"] = "redis://localhost:6379" # should be imported before app. coz settings = Settings() is created when application modules are imported
-# this is done coz redis is running as a service inside container . so we have done port mapping.
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
 from app.main import app
-from app.main import app
-
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from app.db.base import Base
 from app.db.session import get_db
-from sqlalchemy.pool import NullPool
-
-from unittest.mock import AsyncMock
-from app.services.email import EmailService
-
-
-@pytest_asyncio.fixture(scope="session", autouse=True)
-async def dispose_engine():
-    yield
-    await test_engine.dispose()
-
-
-@pytest_asyncio.fixture
-async def client():# function scope
-
-    transport = ASGITransport(app=app)
-
-    async with AsyncClient( # opens and closes the client request
-        transport=transport,
-        base_url="http://test"
-    ) as client:
-        
-        yield client
+from app.db.base import Base
 
 
 
-TEST_DATABASE_URL = "postgresql+asyncpg://postgres:4269@localhost:5432/saas_test_db"
+load_dotenv()
+
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 
 
 test_engine = create_async_engine(
-    TEST_DATABASE_URL,
-    echo = True,
-    poolclass = NullPool,# due to this db connections are not reused from connection pool.
-    # once they are made and used for a request then they are completely destroyed. Cost per request increases
-    # as new connection each time.
+    TEST_DATABASE_URL, # type: ignore
+    echo=True,
 )
 
-
 TestSessionLocal = async_sessionmaker(
-    bind = test_engine,
+    bind=test_engine,
     class_= AsyncSession,
     expire_on_commit=False,
 )
 
-@pytest_asyncio.fixture # (autouse = True) automatically run this fixture for every test
+
+async def override_get_db():
+
+    async with TestSessionLocal() as session:
+        yield session
+
+app.dependency_overrides[get_db] = override_get_db
+
+
+@pytest_asyncio.fixture # used to create async fixturess
+async def client():# fixture scope = function by default -> 100 tests, fixture is executed 100 times.
+    # creates http client
+
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+    ) as client:
+        yield client # pauses until fixture scope is finished
+
+
+@pytest_asyncio.fixture
 async def setup_database():
 
     async with test_engine.begin() as connection:
-
         await connection.run_sync(
             Base.metadata.create_all
         )
@@ -76,39 +70,4 @@ async def setup_database():
         )
 
 
-async def override_get_db():
-
-    async with TestSessionLocal() as session:
-        yield session
-
-app.dependency_overrides[get_db] = override_get_db # so whenever client requests needs
-# fastapi overrides get_db with this function.
-
-
-@pytest_asyncio.fixture(autouse=True)
-async def mock_email_service(monkeypatch):# monkeypatch is built in python fixture
-
-    monkeypatch.setattr(# changes EmailService.send_verification_email with AsyncMock()
-        EmailService,
-        "send_verification_email",
-        AsyncMock(),
-    )
-
-    monkeypatch.setattr(
-        EmailService,
-        "send_password_reset_email",
-        AsyncMock(),
-    )
-
-    monkeypatch.setattr(
-        EmailService,
-        "send_invitation_email",
-        AsyncMock(),
-    )
-
-    monkeypatch.setattr(
-        EmailService,
-        "send_invitation_accepted_notification",
-        AsyncMock(),
-    )
 
