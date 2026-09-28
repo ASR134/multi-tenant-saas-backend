@@ -70,4 +70,12 @@ async def setup_database():# fixture scope = function by default
         )
 
 
+@pytest_asyncio.fixture
+async def db_session():
+    # this is used when in a test we want to interact with db. Our api already gets db in fastapi 
+    # which gets overridden by override_get_db().
+    async with TestSessionLocal() as session:
+        yield session
+
+
 
