@@ -21,7 +21,7 @@ TestSessionLocal = async_sessionmaker(
     expire_on_commit=False,
 )
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio # tests engine
 async def test_database_connection():
 
     async with test_engine.connect() as connection:
@@ -32,7 +32,7 @@ async def test_database_connection():
         assert result.scalar() == 1
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio # tests database session
 async def test_database_session():
 
     async with TestSessionLocal() as session:

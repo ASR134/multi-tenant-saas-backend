@@ -92,3 +92,20 @@ async def test_register_existing_verified_user(
     data = response.json()
 
     assert data["detail"] == "Email already registered"
+
+
+@pytest.mark.asyncio
+async def test_register_user_invalid_email(
+        client,
+        setup_database,
+):
+    response = await client.post(
+        "/api/v1/users",
+        json={
+            "email":"invalid_email",
+            "full_name":"Test User",
+            "password":"12345",
+        },
+    )
+
+    assert response.status_code == 422
