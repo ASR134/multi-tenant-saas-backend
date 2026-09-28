@@ -45,10 +45,13 @@ class UserService:
             await self.db.commit()
 
             # send verification email
-            await self.email_service.send_verification_email(
-                email=email,
-                verification_token=verification_token,
-            )
+            try:
+                await self.email_service.send_verification_email(
+                    email=email,
+                    verification_token=verification_token,
+                )
+            except Exception as e:
+                logger.error("Failed to send verification email",exc_info=True)
 
             return existing_user
 
@@ -77,7 +80,7 @@ class UserService:
             )
         except Exception as e:
             logger.error("Failed to send verification email",exc_info=True)# after this the function still executes and returns user. we are not
-            # using raise as our user is created and we don't want already registered user turn into a failure.
+            # using raise as our user is created and we don't want already registered user to get 500 internal server error.
         
         return user
 
