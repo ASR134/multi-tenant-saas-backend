@@ -19,7 +19,7 @@ async def test_register_user(# pytest sees the fixtures finds them and executes 
             "/api/v1/users",
             json={
                 "email": "test@example.com",
-                "password": "12345",
+                "password": "12345678",
                 "full_name": "Test User",
             },
         )
@@ -41,7 +41,7 @@ async def test_register_user(# pytest sees the fixtures finds them and executes 
 
 
 @pytest.mark.asyncio
-async def test_register_existing_verified_user(
+async def test_reregister_existing_verified_user(
     client,
     setup_database,
     db_session,
@@ -57,7 +57,7 @@ async def test_register_existing_verified_user(
             json={
                 "full_name" : "Test User",
                 "email" : "test@example.com",
-                "password" : "12345",
+                "password" : "12345678",
             },
         )
 
@@ -83,7 +83,7 @@ async def test_register_existing_verified_user(
         json={
             "full_name" : "Test User",
             "email" : "test@example.com",
-            "password" : "12345",
+            "password" : "12345678",
         },
     )
 
@@ -104,8 +104,53 @@ async def test_register_user_invalid_email(
         json={
             "email":"invalid_email",
             "full_name":"Test User",
-            "password":"12345",
+            "password":"12345678",
         },
     )
 
     assert response.status_code == 422
+
+
+
+@pytest.mark.asyncio
+async def test_reregister_unverified_user(
+    client,
+    setup_database,
+):
+    with patch(
+        target="app.services.email.EmailService.send_verification_email",
+        new_callable=AsyncMock,
+    ) as mock_send_email:
+        
+        result = await client.post(
+            "/api/v1/users",
+            json = {
+                "email" : "test@example.com",
+                "password" : "12345678",
+                "full_name" : "Test User",
+            },
+        )
+
+        assert result.status_code == 201
+        
+        # now reregister using same email
+        result = await client.post(
+            "/api/v1/users",
+            json = {
+                "email" : "test@example.com",
+                "password" : "12345679",
+                "full_name" : "Test User1",
+            },
+        )
+
+    assert result.status_code == 201
+
+    assert mock_send_email.await_count == 2
+
+    data = result.json()
+
+    assert data["email"] == "test@example.com"
+    assert data["full_name"] == "Test User1"
+
+
+
