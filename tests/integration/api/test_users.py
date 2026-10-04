@@ -95,7 +95,7 @@ async def test_reregister_existing_verified_user(
 
 
 @pytest.mark.asyncio
-async def test_register_user_invalid_email(
+async def test_register_user_invalid_email( # emails which pydantic can detect
         client,
         setup_database,
 ):
@@ -113,7 +113,7 @@ async def test_register_user_invalid_email(
 
 
 @pytest.mark.asyncio
-async def test_reregister_unverified_user(
+async def test_reregister_unverified_user(# this test dosen't check whether db got updated.
     client,
     setup_database,
 ):

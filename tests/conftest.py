@@ -1,6 +1,10 @@
 # this file contains all fixtures
 # fixture - no calling required, scoping and caching, autouse
 import os
+# Pydantic BaseSettings reads configuration from multiple sources. 
+# If the same setting(redis_url) exists in both the environment and .env, the environment variable takes priority.
+os.environ["REDIS_URL"] = "redis://localhost:6379" # that why it is loaded before the app loads for testing.
+
 from dotenv import load_dotenv
 
 import pytest_asyncio
