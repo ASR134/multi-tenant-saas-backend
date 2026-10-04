@@ -93,3 +93,40 @@ async def test_login_wrong_password(
     data = response.json()
 
     assert data["detail"] == "Invalid email or password"
+
+
+
+@pytest.mark.asyncio
+async def test_login_unverified_email(
+    client,
+    setup_database,
+):
+    with patch(
+        target="app.services.email.EmailService.send_verification_email",
+        new_callable=AsyncMock,
+    ):
+        response = await client.post(
+            "/api/v1/users",
+            json = {
+                "email" : "test@example.com",
+                "password" : "12345678",
+                "full_name" : "Test User",
+            },
+        )
+
+    assert response.status_code == 201
+
+    # now login (let email unverified)
+    response = await client.post(
+        "/api/v1/auth/login",
+        data = {
+            "username" : "test@example.com",
+            "password" : "12345678",
+        },
+    )
+
+    assert response.status_code == 401
+
+    data = response.json()
+
+    assert data["detail"] == "Please verify your email before logging in"
