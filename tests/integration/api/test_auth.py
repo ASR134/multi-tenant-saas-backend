@@ -57,3 +57,39 @@ async def test_login_user(
     assert data["token_type"]  == "bearer"
 
     assert "access_token" in data
+
+
+@pytest.mark.asyncio
+async def test_login_wrong_password(
+    client,
+    setup_database,
+):
+    with patch(
+        target="app.services.email.EmailService.send_verification_email",
+        new_callable=AsyncMock,
+    ):
+        response = await client.post(
+            "/api/v1/users",
+            json = {
+                "email" : "test@example.com",
+                "password" : "12345678",
+                "full_name" : "Test User",
+            },
+        )
+
+    assert response.status_code == 201
+
+    # now login (no need to make the registered user verified for this test -> check authenticate_user())
+    response = await client.post(
+        "/api/v1/auth/login",
+        data = {
+            "username" : "test@example.com",
+            "password" : "wrong_password",
+        },
+    )
+
+    assert response.status_code == 401 # unauthenticated
+
+    data = response.json()
+
+    assert data["detail"] == "Invalid email or password"
