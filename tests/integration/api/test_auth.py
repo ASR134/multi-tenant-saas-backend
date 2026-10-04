@@ -130,3 +130,25 @@ async def test_login_unverified_email(
     data = response.json()
 
     assert data["detail"] == "Please verify your email before logging in"
+
+
+
+@pytest.mark.asyncio
+async def test_login_nonexixtent_email( # email dosent exist in out database
+    client,
+    setup_database,
+):
+    # now login (let email unverified)
+    response = await client.post(
+        "/api/v1/auth/login",
+        data = {
+            "username" : "nonexistent@example.com",
+            "password" : "12345678",
+        },
+    )
+
+    assert response.status_code == 401
+
+    data = response.json()
+
+    assert data["detail"] == "Invalid email or password"
