@@ -210,3 +210,80 @@ async def test_get_organizations(
 
 
 
+@pytest.mark.asyncio
+async def test_get_organizations_by_org_id(
+    client,
+    setup_database,
+    db_session,
+):
+    with patch(
+        target="app.services.email.EmailService.send_verification_email",
+        new_callable=AsyncMock,
+    ):
+        response = await client.post(
+            "/api/v1/users",
+            json = {
+                "email" : "test@example.com",
+                "password" : "12345678",
+                "full_name" : "Test User",
+            },
+        )
+
+    assert response.status_code == 201
+
+    result = await db_session.execute(
+        select(User).where(
+            User.email == "test@example.com",
+        ),
+    )
+
+    user = result.scalar_one()
+    user.email_verified = True
+
+    await db_session.commit()
+
+    # login
+    response = await client.post(
+        "/api/v1/auth/login",
+        data = {
+            "username" : "test@example.com",
+            "password" : "12345678",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    token = data["access_token"]
+
+    # create organizations
+    response = await client.post(
+        "/api/v1/organizations",
+        json = {
+            "name" : "team1",
+        },
+        headers = {
+            "Authorization" : f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 201
+
+    data = response.json()
+    org_id = data["id"]
+
+    # get organization by org_id
+    response = await client.get(
+        f"/api/v1/organizations/{org_id}",
+        headers = {
+            "Authorization" : f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+    
+    assert data["id"] == org_id
+    assert data["name"] == "team1"
