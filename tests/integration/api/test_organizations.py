@@ -106,3 +106,27 @@ async def test_create_organization_without_auth(
     data = response.json()
 
     assert data["detail"] == "Not authenticated"
+
+
+
+@pytest.mark.asyncio
+async def test_create_organization_with_invalid_token(
+    client,
+):
+    token = "invalid_token"
+
+    response = await client.post(
+        "/api/v1/organizations",
+        json = {
+            "name" : "team",
+        },
+        headers = {
+            "Authorization" : f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 401
+
+    data = response.json()
+
+    assert data["detail"] == "Could not validate credentials"
