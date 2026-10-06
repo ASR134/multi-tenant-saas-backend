@@ -87,3 +87,22 @@ async def test_create_organization(
     membership = result.scalar_one()
 
     assert membership.role == "owner"
+
+
+
+@pytest.mark.asyncio
+async def test_create_organization_without_auth(
+    client,
+):
+    response = await client.post(
+        "/api/v1/organizations",
+        json = {
+            "name" : "team",
+        },
+    )
+
+    assert response.status_code == 401
+
+    data = response.json()
+
+    assert data["detail"] == "Not authenticated"

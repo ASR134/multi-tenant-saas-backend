@@ -5,7 +5,7 @@ from sqlalchemy import select
 from app.models.user import User
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio # plugin that gives pytest ability to execute async test functions
 async def test_register_user(# pytest sees the fixtures finds them and executes them
     client,
     setup_database,
