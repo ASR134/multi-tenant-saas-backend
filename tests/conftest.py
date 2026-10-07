@@ -13,6 +13,7 @@ from httpx import ASGITransport, AsyncClient
 # ASGITransport - allows httpx to communicate directly with fastapi app inside test
 # instead of sending the request through 127.0.0.1:8000
 
+from app.db.redis import redis_client
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
 from app.main import app
 from app.db.session import get_db
@@ -81,5 +82,20 @@ async def db_session():
     async with TestSessionLocal() as session:
         yield session
 
+
+@pytest_asyncio.fixture
+async def setup_redis(autouse=True):# for clearing the keys related to rate limits
+
+    keys = await redis_client.keys("login:fail:*")# gives list of bytes or strings (depends on decode_responses)
+
+    if keys:
+        await redis_client.delete(*keys) # delete if any from prev tests
+
+    yield
+
+    keys = await redis_client.keys("login:fail:*")# delete if any from the current test which ran
+
+    if keys:
+        await redis_client.delete(*keys)
 
 

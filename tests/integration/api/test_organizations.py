@@ -284,6 +284,6 @@ async def test_get_organizations_by_org_id(
     assert response.status_code == 200
 
     data = response.json()
-    
+
     assert data["id"] == org_id
     assert data["name"] == "team1"
