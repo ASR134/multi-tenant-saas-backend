@@ -287,3 +287,103 @@ async def test_get_organizations_by_org_id(
 
     assert data["id"] == org_id
     assert data["name"] == "team1"
+
+
+
+@pytest.mark.asyncio
+async def test_user_cannot_access_other_organization(
+    client,
+    setup_database,
+    db_session,
+):
+    with patch(
+        target="app.services.email.EmailService.send_verification_email",
+        new_callable=AsyncMock,
+    ) as mock_send_email:
+
+        # register user A
+        response1 = await client.post(
+            "/api/v1/users",
+            json = {
+                "email" : "test1@example.com",
+                "password" : "12345678",
+                "full_name" : "Test User1",
+            },
+        )
+
+        # register user B
+        response2 = await client.post(
+            "/api/v1/users",
+            json = {
+                "email" : "test2@example.com",
+                "password" : "123456789",
+                "full_name" : "Test User2",
+            },
+        )
+
+    assert response1.status_code == 201
+    assert response2.status_code == 201
+
+    # make emails verified = True
+    result1 = await db_session.execute(select(User).where(
+        User.email=="test1@example.com",
+    ))
+    user1=result1.scalar_one()
+    user1.email_verified=True
+
+    result2 = await db_session.execute(select(User).where(
+            User.email=="test2@example.com",
+        ))
+    user2=result2.scalar_one()
+    user2.email_verified=True
+
+    await db_session.commit()
+
+    # login user A
+    response1 = await client.post(
+        "/api/v1/auth/login",
+        data = {
+            "username" : "test1@example.com",
+            "password" : "12345678",
+        },
+    )
+    assert response1.status_code == 200
+    token1 = response1.json()["access_token"]
+
+    # User A creates org
+    response1 = await client.post(
+        "/api/v1/organizations",
+        json = {
+            "name" : "team1",
+        },
+        headers = {
+            "Authorization" : f"Bearer {token1}",
+        },
+    )
+    assert response1.status_code == 201
+    org_id1= response1.json()["id"]
+
+    # login user B
+    response2 = await client.post(
+        "/api/v1/auth/login",
+        data = {
+            "username" : "test2@example.com",
+            "password" : "123456789",
+        },
+    )
+    assert response2.status_code == 200
+    token2 = response2.json()["access_token"]
+
+    # UserB gets UserA org
+    response2 = await client.get(
+        f"/api/v1/organizations/{org_id1}",
+        headers = {
+            "Authorization" : f"Bearer {token2}",
+        }
+    )
+
+    assert response2.status_code == 404
+
+    data = response2.json()
+
+    assert data["detail"] == "Organization not found"

@@ -51,10 +51,10 @@ class OrganizationService:
             user_id=user_id,
         )
 
-        if organization is None:
+        if organization is None: # returning 404 won't let unauthorized person know whether there exist such org.
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You are not member of this organization",
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Organization not found",
             )
 
 

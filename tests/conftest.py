@@ -83,8 +83,8 @@ async def db_session():
         yield session
 
 
-@pytest_asyncio.fixture
-async def setup_redis(autouse=True):# for clearing the keys related to rate limits
+@pytest_asyncio.fixture(autouse=True)
+async def setup_redis():# for clearing the keys related to rate limits
 
     keys = await redis_client.keys("login:fail:*")# gives list of bytes or strings (depends on decode_responses)
 
