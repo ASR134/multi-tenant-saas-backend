@@ -19,6 +19,9 @@ from app.main import app
 from app.db.session import get_db
 from app.db.base import Base
 
+from unittest.mock import AsyncMock, patch
+from app.models.user import User
+from sqlalchemy import select
 
 
 load_dotenv()
@@ -99,3 +102,68 @@ async def setup_redis():# for clearing the keys related to rate limits
         await redis_client.delete(*keys)
 
 
+# to reduce redundancy of creating verified users and login to get access token
+@pytest_asyncio.fixture
+async def create_verified_user(
+    client, # pytest dosen't create duplicate fixture instances it passes the same instance
+    db_session, # no setup_database as tables are already created as the test was called
+):
+    async def _create_user(
+            email,
+            password,
+            full_name,
+    ):
+        with patch(
+            target="app.services.email.EmailService.send_verification_email",
+            new_callable=AsyncMock,
+        ) as send_mock_email:
+
+            response = await client.post(
+                "/api/v1/users",
+                json = {
+                    "email" : email,
+                    "password" : password,
+                    "full_name" : full_name,
+                },
+            )
+
+        assert response.status_code == 201
+
+        result = await db_session.execute(
+            select(User).where(
+                User.email == "test@example.com",
+            ),
+        )
+
+        user = result.scalar_one()
+        user.email_verified = True
+
+        await db_session.commit()
+
+        return user
+
+    return _create_user
+
+
+@pytest_asyncio.fixture
+async def auth_token(
+    client,
+):
+    async def _login(
+            email,
+            password,
+    ):
+
+        response = await client.post(
+            "/api/v1/auth/login",
+            data = {
+                "username" : email,
+                "password" : password,
+            },
+        )
+
+        assert response.status_code == 200
+
+        return response.json()["access_token"]
+
+    return _login
