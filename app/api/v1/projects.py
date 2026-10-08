@@ -42,7 +42,7 @@ async def create_project(
     response_model=list[ProjectResponse],
     status_code=status.HTTP_200_OK
 )
-async def get_projects_by_org_id(
+async def get_projects_by_org_id(# query parameters
     organization_id : int,
     page : int = Query(1,ge=1),
     limit : int = Query(20,ge=1,le=100), 
