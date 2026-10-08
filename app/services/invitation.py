@@ -12,7 +12,9 @@ from fastapi import HTTPException, status
 from datetime import datetime, timezone
 from app.utils.invitation import generate_invitation_token, hash_invitation_token, get_invitation_expiry
 from app.services.email import EmailService
+import logging
 
+logger = logging.getLogger(__name__)
 
 class InvitationService:
 
@@ -38,8 +40,8 @@ class InvitationService:
 
         if membership is None:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You are not member of this organization",
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Organization not found",
             )
 
         invitation = await self.invitation_repository.get_by_org_id_and_email(# used to get invitation for given org_id and email
@@ -68,11 +70,21 @@ class InvitationService:
                 user_id=user_id,
             )
 
-            await self.email_service.send_invitation_email(
-                email=email,
-                invitation_token=invitation_token,
-                organization_name=organization.name, # type: ignore
-            )
+            try:
+                await self.email_service.send_invitation_email(
+                    email=email,
+                    invitation_token=invitation_token,
+                    organization_name=organization.name, # type: ignore
+                )
+            except Exception as e:
+                logger.error(
+                    "Failed to send invitation email",
+                    exc_info=True,
+                    extra={
+                        "organization_id" : organization_id,
+                        "email" : email,
+                    }
+                )
 
             return invitation
 
@@ -96,12 +108,22 @@ class InvitationService:
             user_id=user_id,
         )
         
-        await self.email_service.send_invitation_email(
-            email=email,
-            invitation_token=invitation_token,
-            organization_name=organization.name, # type: ignore
-        
-        )
+        try:
+            await self.email_service.send_invitation_email(
+                email=email,
+                invitation_token=invitation_token,
+                organization_name=organization.name, # type: ignore
+            )
+        except Exception as e:
+            logger.error(
+                "Failed to send invitation email",
+                exc_info=True,
+                extra={
+                    "organization_id" : organization_id,
+                    "email" : email,
+                }
+            )
+
         return invitation
 
 
