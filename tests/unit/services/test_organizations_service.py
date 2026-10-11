@@ -179,3 +179,46 @@ async def test_get_organization_by_org_id_not_found(
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "Organization not found"
+
+
+#------------------------------------------------------------------------------------------------
+# get_organization_by_user_id()
+@pytest.mark.asyncio
+async def test_get_organizations_by_user_id_success(
+    repository,
+    service,
+):
+    # arrange
+    organizations = [
+        SimpleNamespace(id = 10,name = "Test OrgA"),
+        SimpleNamespace(id = 20,name = "Test OrgB"),
+    ] 
+
+    repository.get_by_user_id.return_value = organizations
+
+    #act 
+    result = await service.get_organizations_by_user_id( # service method called
+        user_id=1,
+    )
+
+    assert result == organizations
+
+
+@pytest.mark.asyncio
+async def test_get_organizations_by_user_id_returns_empty_list(
+    repository,
+    service,
+):
+    # arrange
+    repository.get_by_user_id.return_value = []
+
+    #act
+    result = await service.get_organizations_by_user_id(
+        user_id=1,
+    )
+
+    #assert
+    assert result == []
+    repository.get_by_user_id.assert_awaited_once_with(
+        user_id = 1,
+    )
