@@ -103,3 +103,30 @@ async def test_create_organization_rolls_back_on_repository_failure(
     db.rollback.assert_awaited_once()
     db.commit.assert_not_awaited()
     db.refresh.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_create_organization_rolls_back_on_commit_failure(
+    db,
+    repository,
+    service,
+):
+    # arrange
+    organization = SimpleNamespace(
+        id = 10,
+        name = "Test Organization",
+    )
+    repository.create.return_value = organization
+    db.commit.side_effect = RuntimeError("Commit failed")
+
+    # act and assert
+    with pytest.raises(RuntimeError,match="Commit failed"):
+        await service.create_organization(
+            name = "Test Organization",
+            user_id=1,
+        )
+
+    # assert
+    db.commit.assert_awaited_once()
+    db.assert_awaited_once()
+    db.assert_not_awaited()
