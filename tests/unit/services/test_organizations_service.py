@@ -1,4 +1,4 @@
-from types import SimpleNamespace
+from types import SimpleNamespace 
 from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
@@ -44,13 +44,17 @@ def service(db, repository, monkeypatch):# inject the mocked repo into the sevic
 #--------------------------------------------------------------------------------------------------------------------
 # create_organization()
 @pytest.mark.asyncio
-async def test_create_organization_success(db, repository, service):
+async def test_create_organization_success(
+    db,
+    repository,
+    service,
+):
     organization = SimpleNamespace(
         id = 10,
         name = "Test Organization",
     )
 
-    repository.create.return_value = organization
+    repository.create.return_value = organization # need to initialise before actual service method is called
 
     result = await service.create_organization( # executes the service method
         name = "Test Organization",
@@ -79,3 +83,23 @@ async def test_create_organization_success(db, repository, service):
     assert result is organization
 
 
+@pytest.mark.asyncio
+async def test_create_organization_rolls_back_on_repository_failure(
+    db,
+    repository,
+    service,
+):
+    # arrange 
+    repository.create.side_effect = RuntimeError("Database Error")
+
+    # act and assert
+    with pytest.raises(RuntimeError, match="Database Error"): # tell pytest to expect the exception
+        await service.create_organization(
+            name="Test Organization",
+            user_id=1,
+        )
+
+    # assert
+    db.rollback.assert_awaited_once()
+    db.commit.assert_not_awaited()
+    db.refresh.assert_not_awaited()
