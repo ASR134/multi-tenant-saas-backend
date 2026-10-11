@@ -131,7 +131,7 @@ async def test_create_organization_rolls_back_on_commit_failure(
     db.rollback.assert_awaited_once()
     db.refresh.assert_not_awaited()
 
-
+#------------------------------------------------------------------------------------------------------------------
 # get_organization_by_org_id()
 @pytest.mark.asyncio
 async def test_get_organization_by_org_id_success(
@@ -160,3 +160,22 @@ async def test_get_organization_by_org_id_success(
 
     assert result is organization
 
+
+
+@pytest.mark.asyncio
+async def test_get_organization_by_org_id_not_found(
+    repository,
+    service,
+):
+    # arrange
+    repository.get_by_organization_id.return_value = None
+
+    # act and assert
+    with pytest.raises(HTTPException) as exc_info: # tells pytest to expect this exception
+        await service.get_organization_by_org_id( # service method called
+            organization_id=10,
+            user_id=1,
+        )
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Organization not found"
