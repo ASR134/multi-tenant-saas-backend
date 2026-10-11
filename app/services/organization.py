@@ -41,7 +41,16 @@ class OrganizationService:
         return organization
 
 
-    async def get_organization_by_org_id(
+    async def get_organizations_by_user_id(# get all the organizations user belongs to -> uses user_id
+            self,
+            user_id : int,
+    ):
+        return await self.organization_repository.get_by_user_id(
+            user_id=user_id,
+        )
+
+
+    async def get_organization_by_org_id(# get the specific organization user belongs to by org_id  -> use user_id and org_id
             self,
             organization_id : int,
             user_id : int,
@@ -59,12 +68,3 @@ class OrganizationService:
 
 
         return organization
-
-
-    async def get_organizations_by_user_id(
-            self,
-            user_id : int,
-    ):
-        return await self.organization_repository.get_by_user_id(
-            user_id=user_id,
-        )
