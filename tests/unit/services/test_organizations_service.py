@@ -61,12 +61,12 @@ async def test_create_organization_success(
         user_id = 1,
     )
 
-    # organization creation
+    # assert organization creation
     repository.create.assert_awaited_once_with(
         name = "Test Organization",
     )
 
-    # Owner membership creation
+    # assert Owner membership creation
     db.add.assert_called_once()
     membership = db.add.call_args.args[0] # call_args.args contains positional arg
 
@@ -128,5 +128,35 @@ async def test_create_organization_rolls_back_on_commit_failure(
 
     # assert
     db.commit.assert_awaited_once()
-    db.assert_awaited_once()
-    db.assert_not_awaited()
+    db.rollback.assert_awaited_once()
+    db.refresh.assert_not_awaited()
+
+
+# get_organization_by_org_id()
+@pytest.mark.asyncio
+async def test_get_organization_by_org_id_success(
+    repository,
+    service,
+):
+    # arrange 
+    organization = SimpleNamespace(
+        id = 10,
+        name = "Test Organization",
+    )
+
+    repository.get_by_organization_id.return_value = organization
+
+    # act
+    result = await service.get_organization_by_org_id( # service method called
+        organization_id=10,
+        user_id=1,
+    )
+
+    #assert
+    repository.get_by_organization_id.assert_awaited_once_with(
+        organization_id = 10,
+        user_id = 1,
+    )
+
+    assert result is organization
+
