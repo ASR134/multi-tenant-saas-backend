@@ -6,6 +6,7 @@ from fastapi import HTTPException
 
 from app.services.project import ProjectService
 import json
+from datetime import datetime
 
 @pytest.fixture
 def db():
@@ -231,3 +232,71 @@ async def test_get_projects_for_organization_cache_hit(
     redis_mock.set.assert_not_awaited()
 
     assert result == cached_projects
+
+
+@pytest.mark.asyncio
+async def test_get_projects_for_organization_cache_miss(
+    membership_repository,
+    project_repository,
+    redis_mock,
+    service,
+):
+    membership = SimpleNamespace(
+        organization_id = 10,
+        user_id = 1,
+        role = "owner",
+    )
+
+    membership_repository.get_by_user_and_organization.return_value = membership
+
+    projects = [
+        SimpleNamespace(
+            organization_id = 10,
+            name = "Test Project",
+            description = "Test description",
+            id = 100,
+            created_at=datetime(2026, 10, 12, 10, 0, 0),
+            version = 1,
+        )
+    ]
+
+    project_repository.get_by_organization_id.return_value = projects
+
+    #act
+    result = await service.get_projects_for_organization(
+        organization_id=10,
+        user_id=1,
+        page=1,
+        limit=10,
+    )
+
+    # assert project repo call
+    project_repository.get_by_organization_id.assert_awaited_once_with(
+        organization_id = 10,
+        page = 1,
+        limit = 10,
+    )
+
+    # assert redis cache lookup
+    redis_mock.get.assert_awaited_once_with(
+        "projects:org:10:page:1:limit:10",
+    )
+
+    # assert redis set 
+    redis_mock.set.assert_awaited_once_with(
+        "projects:org:10:page:1:limit:10",
+        json.dumps([
+            {
+                "id" : 100,
+                "organization_id" : 10,
+                "name" : "Test Project",
+                "description" : "Test description",
+                "created_at" : "2026-10-12T10:00:00", # .isoformat() converts datetime obj to iso format string
+                "version" : 1,
+            },
+        ]),
+        ex=60,
+    )
+
+    assert result == projects
+
