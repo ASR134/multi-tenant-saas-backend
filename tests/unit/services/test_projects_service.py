@@ -5,7 +5,7 @@ import pytest
 from fastapi import HTTPException
 
 from app.services.project import ProjectService
-
+import json
 
 @pytest.fixture
 def db():
@@ -177,3 +177,57 @@ async def test_create_project_non_member(
     # verify no redis cache operations
     redis_mock.keys.assert_not_awaited()
     redis_mock.delete.assert_not_awaited()
+
+
+#----------------------------------------------------------------------------------------------
+# get_projects_for_organization()
+
+@pytest.mark.asyncio
+async def test_get_projects_for_organization_cache_hit(
+    membership_repository,
+    project_repository,
+    redis_mock,
+    service,
+):
+    # arrange
+    membership = SimpleNamespace(
+        user_id = 1,
+        oraganization_id = 10,
+        role = "owner",
+    )
+
+    membership_repository.get_by_user_and_organization.return_value = membership
+
+    cached_projects = [
+        {
+            "id" : 100,
+            "organization_id" : 10,
+            "name" : "Test Project",
+            "description" : "Test description",
+        }
+    ]
+
+    redis_mock.get.return_value = json.dumps(cached_projects)
+
+    # act
+    result = await service.get_projects_for_organization(
+        organization_id=10,
+        user_id=1,
+        page=1,
+        limit=10,
+    )
+
+    membership_repository.get_by_user_and_organization.assert_awaited_once_with(
+        user_id=1,
+        organization_id=10,
+    )
+
+    redis_mock.get.assert_awaited_once_with(
+        "projects:org:10:page:1:limit:10",
+    )
+
+    project_repository.get_by_organization_id.assert_not_awaited()
+
+    redis_mock.set.assert_not_awaited()
+
+    assert result == cached_projects
