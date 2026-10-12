@@ -300,3 +300,29 @@ async def test_get_projects_for_organization_cache_miss(
 
     assert result == projects
 
+
+@pytest.mark.asyncio
+async def test_get_projects_for_organization_non_member(
+    membership_repository,
+    project_repository,
+    redis_mock,
+    service,
+):
+    # arrange
+    membership_repository.get_by_user_and_organization.return_value = None
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.get_projects_for_organization(
+            organization_id=10,
+            user_id=1,
+            page=1,
+            limit=10,
+        )
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Organization not found"
+
+    project_repository.get_by_organization_id.assert_not_awaited()
+
+    redis_mock.get.assert_not_awaited()
+    redis_mock.set.assert_not_awaited()
