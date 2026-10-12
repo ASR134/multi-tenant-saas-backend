@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 
 @pytest.fixture
-def db():
+def db(): # by default functional scope
     session = MagicMock()
 
     session.commit = AsyncMock()
@@ -326,3 +326,51 @@ async def test_get_projects_for_organization_non_member(
 
     redis_mock.get.assert_not_awaited()
     redis_mock.set.assert_not_awaited()
+
+#---------------------------------------------------------------------------------------------------------
+# get_project_with_org_and_project_id()
+
+@pytest.mark.asyncio
+async def test_get_project_cache_hit(
+    membership_repository,
+    project_repository,
+    redis_mock,
+    service,
+):
+    # arrange
+    membership = SimpleNamespace( # initialise only attributes that will be used in test
+        organization_id = 10,
+        user_id = 1,
+        role = "owner"
+    )
+
+    membership_repository.get_by_user_and_organization.return_value = membership
+
+    project = { # SimpleNamespace canno be serialised.
+        "organization_id" : 10,
+        "name" : "Test Project",
+        "description" : "Test description",
+    }
+
+    redis_mock.get.return_value = json.dumps(project) # coz redis stores project in json form
+
+    # act
+    result = await service.get_project_with_org_and_project_id(
+        organization_id=10,
+        project_id=5,
+        user_id=1,
+    )
+
+    membership_repository.get_by_user_and_organization.assert_awaited_once_with(
+        organization_id = 10,
+        user_id = 1,
+    )
+
+    project_repository.get_by_org_and_project_id.assert_not_awaited()
+
+    redis_mock.get.assert_awaited_once_with(
+        "project:org:10:id:5",
+    )
+    redis_mock.set.assert_not_awaited()
+
+    assert result == project
