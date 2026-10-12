@@ -1,0 +1,145 @@
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+from fastapi import HTTPException
+
+from app.services.project import ProjectService
+
+
+@pytest.fixture
+def db():
+    session = MagicMock()
+
+    session.commit = AsyncMock()
+    session.refresh = AsyncMock()
+
+    return session
+
+
+@pytest.fixture
+def project_repository():
+    repo = MagicMock()
+
+    repo.create = AsyncMock()
+    repo.get_by_organization_id = AsyncMock()
+    repo.get_by_org_and_project_id = AsyncMock()
+    repo.update = AsyncMock()
+    repo.delete = AsyncMock()
+
+    return repo
+
+
+@pytest.fixture
+def membership_repository():
+    repo = MagicMock()
+
+    repo.get_by_user_and_organization = AsyncMock()
+
+    return repo
+
+
+@pytest.fixture
+def redis_mock():
+    redis = MagicMock() # mocking redis client object
+
+    redis.keys = AsyncMock(return_value=[])
+    redis.get = AsyncMock(return_value=None)
+    redis.set = AsyncMock()
+    redis.delete = AsyncMock()
+
+    return redis
+
+
+@pytest.fixture
+def service(
+    db,
+    project_repository,
+    membership_repository,
+    redis_mock,
+    monkeypatch,
+):
+
+    monkeypatch.setattr(
+        "app.services.project.ProjectRepository",
+        lambda db : project_repository,
+    )
+
+    monkeypatch.setattr(
+        "app.services.project.MembershipRepository",
+        lambda db : membership_repository,
+    )
+
+    monkeypatch.setattr(
+        "app.services.project.redis_client",
+        redis_mock,
+    )
+
+    return ProjectService(db)
+
+#-------------------------------------------------------------------------------------------------------
+# create_project()
+@pytest.mark.asyncio
+async def test_create_project_success(
+    db,
+    project_repository,
+    membership_repository,
+    redis_mock,
+    service,
+):
+    # arrange
+    membership = SimpleNamespace(
+        user_id=1,
+        organization_id=10,
+        role="owner",
+    )
+
+    project = SimpleNamespace( # only give those attributes which are being used in sevice method
+        id=100,
+        organization_id=10,
+        name="Test Project",
+        description="Test description",
+    )
+
+    membership_repository.get_by_user_and_oranization.return_value = membership
+
+    project_repository.create.return_value = project
+
+    # act
+    result = await service.create_project(
+        organization_id=10,
+        name="Test Project",
+        user_id=1,
+        description="Test description",
+    )
+
+    # assert membership repo function
+    membership_repository.get_by_user_and_organization.assert_awaited_once_with(
+        user_id = 1,
+        organization_id = 10,
+    )
+    #assert project repo function
+    project_repository.create.assert_awaited_once_with(
+        organization_id = 10,
+        name = "Test Project",
+        description = "Test description",
+    )
+
+    print("Test db:", id(db))
+    print("Service db:", id(service.db))
+    print("Same object:", db is service.db)
+    print("Commit await count:", db.commit.await_count)
+    # assert db operations
+    db.commit.assert_awaited_once()
+    db.refresh.assert_awaited_once_with(project)
+
+    # assert cache invalidation
+    redis_mock.keys.assert_awaited_once_with(
+        "projects:org:10:page:*",
+    )
+
+    redis_mock.delete.assert_not_awaited()
+
+    assert result is project
+
+

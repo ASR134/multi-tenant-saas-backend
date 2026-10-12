@@ -43,7 +43,7 @@ class ProjectService:
 
         await self.db.commit()
         await self.db.refresh(project)
-
+        # for this organization remove cache projects if any coz a new project is added
         cache_pattern = f"projects:org:{organization_id}:page:*"
 
         keys = await redis_client.keys(cache_pattern) # returns list of keys
