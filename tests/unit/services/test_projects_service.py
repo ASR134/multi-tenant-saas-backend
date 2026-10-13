@@ -512,7 +512,7 @@ async def test_get_project_non_member(
     redis_mock.set.assert_not_awaited()
 
 #------------------------------------------------------------------------------------------
-# update()
+# update_project()
 @pytest.mark.asyncio
 async def test_update_project_success(
     db,
@@ -694,3 +694,54 @@ async def test_update_project_not_found(
     redis_mock.delete.assert_not_awaited()
 
     redis_mock.keys.assert_not_awaited()
+
+
+# ---------------------------------------------------------------------------------------
+# delete_project()
+@pytest.mark.asyncio
+async def test_delete_project_success(
+    db,
+    membership_repository,
+    project_repository,
+    redis_mock,
+    service,
+):
+    membership = SimpleNamespace(
+        organization_id = 10,
+        user_id = 1,
+        role = "owner",
+    )
+
+    membership_repository.get_by_user_and_organization.return_value = membership
+
+    project = SimpleNamespace(
+        project_id = 5,
+        organization_id = 10,
+    )
+
+    project_repository.get_by_org_and_project_id.return_value = project
+
+    result = await service.delete_project(
+        organization_id=10,
+        project_id=5,
+        user_id=1,
+    )
+
+    membership_repository.get_by_user_and_organization.assert_awaited_once_with(
+        user_id = 1,
+        organization_id = 10,
+    )
+
+    project_repository.get_by_org_and_project_id.assert_awaited_once_with(
+        project_id = 5,
+        organization_id = 10,
+    )
+
+    db.commit.assert_awaited_once()
+
+    redis_mock.delete.assert_awaited_once_with(
+        "project:org:10:id:5",
+    )
+    redis_mock.keys.assert_awaited_once_with(
+        "projects:org:10:page:*",
+    )
