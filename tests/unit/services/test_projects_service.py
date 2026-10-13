@@ -374,3 +374,66 @@ async def test_get_project_cache_hit(
     redis_mock.set.assert_not_awaited()
 
     assert result == project
+
+
+@pytest.mark.asyncio
+async def test_get_project_cache_miss(
+    membership_repository,
+    project_repository,
+    redis_mock,
+    service,
+):
+    membership = SimpleNamespace(
+        user_id = 1,
+        organization_id = 10,
+        role = "owner",
+    )
+
+    membership_repository.get_by_user_and_organization.return_value = membership
+
+    project =SimpleNamespace(
+        organization_id = 10,
+        name = "Test Project",
+        description = "Test description",
+        id = 5,
+        created_at=datetime(2026, 10, 12, 10, 0, 0), # datetime coz .isoformat() needs datatime object.
+        version = 1,
+    )   
+
+    project_repository.get_by_org_and_project_id.return_value = project
+
+    result =await service.get_project_with_org_and_project_id(
+        organization_id=10,
+        project_id=5,
+        user_id=1,
+    )
+
+    membership_repository.get_by_user_and_organization.assert_awaited_once_with(
+        user_id = 1,
+        organization_id = 10,
+    )
+
+    project_repository.get_by_org_and_project_id.assert_awaited_once_with(
+        organization_id = 10,
+        project_id = 5,
+    )
+
+    redis_mock.get.assert_awaited_once_with(
+        "project:org:10:id:5",
+    )
+
+    redis_mock.set.assert_awaited_once_with(
+        "project:org:10:id:5",
+        json.dumps({ # match the order of dictionary pairs
+            "id" : 5,
+            "name" : "Test Project",
+            "organization_id" : 10,
+            "description" : "Test description",
+            "created_at" : "2026-10-12T10:00:00", # .isoformat() converts datetime obj to iso format string
+            "version" : 1,
+        }),
+        ex=60,
+    )
+
+    assert result == project
+
