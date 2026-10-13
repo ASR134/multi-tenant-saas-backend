@@ -745,3 +745,47 @@ async def test_delete_project_success(
     redis_mock.keys.assert_awaited_once_with(
         "projects:org:10:page:*",
     )
+
+
+@pytest.mark.asyncio
+async def test_delete_project_not_found(
+    db,
+    membership_repository,
+    project_repository,
+    redis_mock,
+    service,
+):
+    membership = SimpleNamespace(
+        organization_id = 10,
+        user_id = 1,
+        role = "owner",
+    )
+
+    membership_repository.get_by_user_and_organization.return_value = membership
+
+    project_repository.get_by_org_and_project_id.return_value = None
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.delete_project(
+            organization_id=10,
+            project_id=5,
+            user_id=1,
+        )
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Project not found"
+
+    membership_repository.get_by_user_and_organization.assert_awaited_once_with(
+        user_id = 1,
+        organization_id = 10,
+    )
+
+    project_repository.get_by_org_and_project_id.assert_awaited_once_with(
+        project_id = 5,
+        organization_id = 10,
+    )
+
+    db.commit.assert_not_awaited()
+
+    redis_mock.delete.assert_not_awaited()
+    redis_mock.keys.assert_not_awaited()
