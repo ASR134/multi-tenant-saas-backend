@@ -2,7 +2,7 @@
 
 A production-oriented multi-tenant SaaS backend built with **FastAPI, PostgreSQL, SQLAlchemy, Redis, and Celery**, featuring secure authentication, tenant-based authorization, caching, background processing, and automated testing.
 
-**Live API:** [api.stackwork.dev](https://api.stackwork.dev) · **[Swagger Documentation](https://api.stackwork.dev/docs)** · **[GitHub Repository](https://github.com/ASR134/multi-tenant-saas-backend)**
+**Live API:** [api.stackwork.dev](https://api.stackwork.dev) 
 
 ## 🚀 Features
 
@@ -126,5 +126,3 @@ Use the appropriate test database and Redis configuration for tests that require
 ## 👨‍💻 Author
 
 **ASR134**
-
-[GitHub Profile](https://github.com/ASR134) · [Project Repository](https://github.com/ASR134/multi-tenant-saas-backend)
