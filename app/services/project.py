@@ -165,7 +165,7 @@ class ProjectService:
             expected_version : int,
             project_id : int,
             name : str | None = None,
-            description : str | None=None
+            description : str | None = None
     ):
         membership = await self.membership_repository.get_by_user_and_organization(
                             user_id=user_id,

@@ -510,3 +510,75 @@ async def test_get_project_non_member(
         
     redis_mock.get.assert_not_awaited()
     redis_mock.set.assert_not_awaited()
+
+#------------------------------------------------------------------------------------------
+# update()
+@pytest.mark.asyncio
+async def test_update_project_success(
+    db,
+    membership_repository,
+    project_repository,
+    redis_mock,
+    service,
+):
+    membership = SimpleNamespace(
+        user_id = 1,
+        organization_id = 10,
+        role = "owner",
+    )
+
+    membership_repository.get_by_user_and_organization.return_value = membership
+    
+    project1 = SimpleNamespace( # the project which needs to be updated
+        name = "update",
+        description = "update",
+        version = 1,
+    )
+
+    project2 = SimpleNamespace( # this is the return project after updating project
+        name  = "Test Project",
+        description = "Test description",
+        organization_id = 10,
+        version = 2,
+    )
+
+    project_repository.get_by_org_and_project_id.return_value = project1
+    project_repository.update.return_value = project2
+
+    result = await service.update_project( # service method called
+        organization_id=10,
+        user_id=1,
+        expected_version=1, # this is the version that should be present in repo . then only we wil update
+        project_id=5,
+        name="Test Project",
+        description="Test description",
+    )
+
+    membership_repository.get_by_user_and_organization.assert_awaited_once_with(
+        organization_id = 10,
+        user_id = 1,
+    )
+
+    project_repository.get_by_org_and_project_id.assert_awaited_once_with(
+        organization_id = 10,
+        project_id = 5,
+    )
+
+    project_repository.update.assert_awaited_once_with(
+        project = project1,
+        name = "Test Project",
+        description = "Test description",
+        expected_version = 1,
+    )
+
+    db.commit.assert_awaited_once()
+    
+    redis_mock.delete.assert_awaited_once_with(
+        "project:org:10:id:5",
+    )
+
+    redis_mock.keys.assert_awaited_once_with(
+        "projects:org:10:page:*",
+    )
+
+    assert result == project2
