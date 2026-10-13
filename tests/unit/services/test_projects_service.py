@@ -437,3 +437,48 @@ async def test_get_project_cache_miss(
 
     assert result == project
 
+
+
+@pytest.mark.asyncio
+async def test_get_project_not_found(
+    membership_repository,
+    project_repository,
+    redis_mock,
+    service,
+):
+    membership = SimpleNamespace(
+            user_id = 1,
+            organization_id = 10,
+            role = "owner",
+        )
+    
+    membership_repository.get_by_user_and_organization.return_value = membership
+
+    project_repository.get_by_org_and_project_id.return_value = None
+    
+    # act
+    with pytest.raises(HTTPException) as exc_info:
+        await service.get_project_with_org_and_project_id(
+            organization_id=10,
+            project_id=5,
+            user_id=1,
+        )
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Project not found"
+
+    membership_repository.get_by_user_and_organization.assert_awaited_once_with(
+        user_id = 1,
+        organization_id = 10,
+    )
+    
+    project_repository.get_by_org_and_project_id.assert_awaited_once_with(
+        organization_id = 10,
+        project_id = 5,
+    )
+    
+    redis_mock.get.assert_awaited_once_with(
+        "project:org:10:id:5",
+    )
+
+
