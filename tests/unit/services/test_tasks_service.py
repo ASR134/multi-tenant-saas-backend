@@ -279,3 +279,35 @@ async def test_get_tasks_for_project(
     )
 
     assert result is tasks
+
+
+
+@pytest.mark.asyncio
+async def test_get_tasks_for_project_non_member(
+    membership_repository,
+    project_repository,
+    task_repository,
+    service,
+):
+    membership_repository.get_by_user_and_organization.return_value = None
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.get_tasks_for_project(
+            project_id=5,
+            organization_id=10,
+            user_id=1,
+            page = 1,
+            limit = 10,
+        )   
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Organization not found"
+
+    membership_repository.get_by_user_and_organization.assert_awaited_once_with(
+            user_id = 1,
+            organization_id = 10,
+        )
+    
+    project_repository.get_by_org_and_project_id.assert_not_awaited()
+    
+    task_repository.get_all_for_project.assert_not_awaited()
