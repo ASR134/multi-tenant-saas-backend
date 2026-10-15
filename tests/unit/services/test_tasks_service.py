@@ -353,3 +353,61 @@ async def test_get_tasks_for_project_not_found(
     )
     
     task_repository.get_all_for_project.assert_not_awaited()
+
+
+#-----------------------------------------------------
+# get_task()
+@pytest.mark.asyncio
+async def test_get_task_success(
+    project_repository,
+    membership_repository,
+    task_repository,
+    service,
+):
+    membership = SimpleNamespace(
+        user_id = 1,
+        organization_id = 10,
+        role = "owner",
+    )
+    membership_repository.get_by_user_and_organization.return_value = membership
+
+    project = SimpleNamespace(
+        id = 5,
+        organization_id = 10,
+        name = "Test Project",
+        description = "Test description",
+    )
+    project_repository.get_by_org_and_project_id.return_value = project
+
+    task = SimpleNamespace(
+        id = 100,
+        project_id = 5,
+        title = "Test Task",
+        description = "Test description",
+    )
+    task_repository.get_by_project_and_task_id.return_value = task
+
+    # actual service task called here
+    result = await service.get_task(
+        organization_id=10,
+        user_id=1,
+        project_id=5,
+        task_id=100, # task id = 100 is used everywhere in tests
+    )
+
+    membership_repository.get_by_user_and_organization.assert_awaited_once_with(
+        user_id = 1,
+        organization_id = 10,
+    )
+
+    project_repository.get_by_org_and_project_id.assert_awaited_once_with(
+        project_id = 5,
+        organization_id = 10,
+    )
+
+    task_repository.get_by_project_and_task_id.assert_awaited_once_with(
+        project_id=5,
+        task_id = 100,
+    )
+
+    assert result is task
