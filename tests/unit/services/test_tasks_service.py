@@ -539,3 +539,86 @@ async def test_get_task_task_not_found(
         project_id = 5,
         task_id = 100,
     )
+
+
+#-----------------------------------------------------------
+# update_task()
+@pytest.mark.asyncio
+async def test_update_task_success(
+    db,
+    project_repository,
+    membership_repository,
+    task_repository,
+    service,
+):
+    membership = SimpleNamespace(
+        user_id = 1,
+        organization_id = 10,
+        role = "owner",
+    )
+    membership_repository.get_by_user_and_organization.return_value = membership
+
+    project = SimpleNamespace(
+        id = 5,
+        organization_id = 10,
+        name = "Test Project",
+        description = "Test description",
+    )
+    project_repository.get_by_org_and_project_id.return_value = project
+
+    task = SimpleNamespace( # this is the task that needs to be updated
+        id = 100,
+        project_id = 5,
+        title = "update",
+        description = "update",
+        version = 1,
+    )
+    task_repository.get_by_project_and_task_id.return_value = task
+
+    updated_task = SimpleNamespace(
+        id = 100,
+        project_id = 5,
+        title = "Test Task",
+        description = "Test description",
+        version = 2, # version after update will get incremented
+    )
+    task_repository.update.return_value = updated_task
+
+    # actual service task called here
+    result = await service.update_task(
+        organization_id=10,
+        user_id=1,
+        project_id=5,
+        task_id=100, # task id = 100 is used everywhere in tests
+        expected_version=1,
+        title="Test Task",
+        description="Test description",
+        curr_status="done",
+    )
+
+    membership_repository.get_by_user_and_organization.assert_awaited_once_with(
+        user_id = 1,
+        organization_id = 10,
+    )
+
+    project_repository.get_by_org_and_project_id.assert_awaited_once_with(
+        project_id = 5,
+        organization_id = 10,
+    )
+
+    task_repository.get_by_project_and_task_id.assert_awaited_once_with(
+        project_id=5,
+        task_id = 100,
+    )
+
+    task_repository.update.assert_awaited_once_with(
+        task = task,# this is the task which needs an update
+        title = "Test Task",
+        status = "done",
+        description = "Test description",
+        expected_version = 1,
+    )
+
+    db.commit.assert_awaited_once()
+
+    assert result is updated_task
