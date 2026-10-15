@@ -122,8 +122,8 @@ class TaskSerivce:
 
         if membership is None:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail = "You are not member of this organization"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail = "Organization not found"
             )
 
         project =await self.project_repository.get_by_org_and_project_id(
