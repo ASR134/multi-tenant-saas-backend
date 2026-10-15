@@ -205,3 +205,45 @@ async def test_create_invitation_non_member( # inviter is not the member of the 
     db.commit.assert_not_awaited()
     db.refresh.assert_not_awaited()
     email_service.send_invitation_email.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_create_invitation_status_accepted(
+    db,
+    membership_repository,
+    invitation_repository,
+    organization_repository,
+    email_service,
+    service,
+):
+    membership = SimpleNamespace(
+        user_id = 1,
+        organization_id = 10,
+        role = "owner",
+    )
+    membership_repository.get_by_user_and_organization.return_value = membership
+
+    invitation = SimpleNamespace(
+        organization_id = 10,
+        invited_by = 1,# who invited i.e user_id 
+        email = "test@example.com",
+        status = "accepted",
+    )
+    invitation_repository.get_by_org_id_and_email.return_value = invitation
+
+    # actual service method called
+    with pytest.raises(ValueError) as exc_info:
+        await service.create_invitation(
+            organization_id=10,
+            user_id=1,
+            email = "test@example.com",
+        )   
+
+    assert str(exc_info.value) == "Invitee already member of organization"
+
+    membership_repository.get_by_user_and_organization.assert_awaited_once()
+    invitation_repository.get_by_org_id_and_email.assert_awaited_once()
+    invitation_repository.create.assert_not_awaited()
+    db.commit.assert_not_awaited()
+    db.refresh.assert_not_awaited()
+    email_service.send_invitation_email.assert_not_awaited()
