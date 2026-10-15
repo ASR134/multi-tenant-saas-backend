@@ -603,17 +603,17 @@ async def test_update_project_version_conflict(
     project1 = SimpleNamespace( # the project which needs to be updated
         name = "update",
         description = "update",
-        version = 1,
+        version = 2,# let say someone else updated just before you.
     )
-
     project_repository.get_by_org_and_project_id.return_value = project1
+
     project_repository.update.return_value = None
 
     with pytest.raises(HTTPException) as exc_info:
         result = await service.update_project( # service method called
             organization_id=10,
             user_id=1,
-            expected_version=2, # this is the version that should be present in repo . then only we wil update
+            expected_version=1, # this is the version that should be present in repo . then only we will update
             project_id=5,
             name="Test Project",
             description="Test description",
@@ -636,7 +636,7 @@ async def test_update_project_version_conflict(
         project = project1,
         name = "Test Project",
         description = "Test description",
-        expected_version = 2,
+        expected_version = 1,
     )
 
     db.commit.assert_not_awaited()
