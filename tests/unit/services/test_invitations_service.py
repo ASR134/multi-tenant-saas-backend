@@ -176,3 +176,32 @@ async def test_create_invitation_success(
     )
 
     assert result is invitation
+
+
+@pytest.mark.asyncio
+async def test_create_invitation_non_member( # inviter is not the member of the organization
+    db,
+    membership_repository,
+    invitation_repository,
+    organization_repository,
+    email_service,
+    service,
+):
+    membership_repository.get_by_user_and_organization.return_value = None
+
+    # actual service method called
+    with pytest.raises(HTTPException) as exc_info:
+        await service.create_invitation(
+            organization_id=10,
+            user_id=1,
+            email = "test@example.com",
+        )
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Organization not found"
+
+    membership_repository.get_by_user_and_organization.assert_awaited_once()
+    invitation_repository.create.assert_not_awaited()
+    db.commit.assert_not_awaited()
+    db.refresh.assert_not_awaited()
+    email_service.send_invitation_email.assert_not_awaited()
