@@ -135,3 +135,39 @@ async def test_create_task_success(
     db.refresh.assert_awaited_once_with(task)
 
     assert result is task
+
+
+
+@pytest.mark.asyncio
+async def test_create_task_non_member(
+    db,
+    membership_repository,
+    task_repository,
+    project_repository,
+    service,
+):
+    membership_repository.get_by_user_and_organization.return_value = None
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.create_task(
+            organization_id=10,
+            project_id=5,
+            user_id=1,
+            title="Test Task",
+            description="Test description",
+        )   
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Organization not found"
+
+    membership_repository.get_by_user_and_organization.assert_awaited_once_with(
+        user_id = 1,
+        organization_id = 10,
+    )
+
+    project_repository.get_by_org_and_project_id.assert_not_awaited()
+
+    task_repository.create.assert_not_awaited()
+
+    db.commit.assert_not_awaited()
+    db.refresh.assert_not_awaited()
