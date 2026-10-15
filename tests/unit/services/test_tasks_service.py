@@ -217,3 +217,65 @@ async def test_create_task_project_not_found(
 
     db.commit.assert_not_awaited()
     db.refresh.assert_not_awaited()
+
+
+# -----------------------------------------------------------------
+# get_tasks_for_project()
+@pytest.mark.asyncio
+async def test_get_tasks_for_project(
+    membership_repository,
+    project_repository,
+    task_repository,
+    service,
+):
+    membership = SimpleNamespace(
+        user_id = 1,
+        organization_id = 10,
+        role = "owner",
+    )
+    membership_repository.get_by_user_and_organization.return_value = membership
+
+    project = SimpleNamespace(
+        id = 5,
+        organization_id = 10,
+        name = "Test Project",
+        description = "Test description",
+    )
+    project_repository.get_by_org_and_project_id.return_value = project
+
+    tasks = [
+        SimpleNamespace(
+            id = 100,  # task id
+            project_id = 5,
+            title = "Test Task",
+            description = "Test description",
+            status = "todo",
+        )
+    ]
+    task_repository.get_all_for_project.return_value = tasks
+
+    result = await service.get_tasks_for_project(
+        project_id=5,
+        organization_id=10,
+        user_id=1,
+        page = 1,
+        limit = 10,
+    )
+
+    membership_repository.get_by_user_and_organization.assert_awaited_once_with(
+            user_id = 1,
+            organization_id = 10,
+        )
+    
+    project_repository.get_by_org_and_project_id.assert_awaited_once_with(
+        project_id = 5,
+        organization_id = 10,
+    )
+    
+    task_repository.get_all_for_project.assert_awaited_once_with(
+        project_id = 5,
+        page = 1,
+        limit = 10,
+    )
+
+    assert result is tasks
